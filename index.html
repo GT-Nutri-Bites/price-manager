@@ -1,0 +1,2162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GT Nutri Bites — Price Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+/* ── Variables ───────────────────────────────── */
+:root {
+  --bg:        #080c10;
+  --bg2:       #0c1118;
+  --surface:   #111820;
+  --surface2:  #182030;
+  --surface3:  #1e2a3a;
+  --border:    #1e2d40;
+  --border2:   #243548;
+  --accent:    #22d472;
+  --accent-dim:#16a355;
+  --accent-glow:rgba(34,212,114,0.15);
+  --accent2:   #5effa0;
+  --amber:     #f5a623;
+  --amber-dim: rgba(245,166,35,0.12);
+  --red:       #ff5c5c;
+  --red-dim:   rgba(255,92,92,0.12);
+  --blue:      #4da6ff;
+  --blue-dim:  rgba(77,166,255,0.1);
+  --purple:    #c77dff;
+  --purple-dim:rgba(199,125,255,0.1);
+  --text:      #e8f0f8;
+  --text2:     #9fb3c8;
+  --muted:     #5a7490;
+  --pill-bg:   #0f2218;
+  --pill-border:#1a3d26;
+  --radius-sm: 6px;
+  --radius:    10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --shadow:    0 4px 24px rgba(0,0,0,0.5);
+  --shadow-lg: 0 8px 48px rgba(0,0,0,0.6);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Figtree', sans-serif;
+  font-size: 14px;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ── Background texture ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: 
+    radial-gradient(ellipse 60% 40% at 20% 20%, rgba(34,212,114,0.03) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 80% 80%, rgba(77,166,255,0.02) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Top bar ── */
+header {
+  background: rgba(17,24,32,0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: -0.3px;
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  box-shadow: 0 0 16px rgba(34,212,114,0.25);
+}
+.logo-sep { color: var(--border2); margin: 0 2px; }
+.logo-module {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 12px 4px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text2);
+  cursor: default;
+}
+.header-pill-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,100%{ box-shadow: 0 0 4px var(--accent); }
+  50%{ box-shadow: 0 0 10px var(--accent); }
+}
+
+.header-right { display: flex; gap: 8px; align-items: center; }
+
+/* ── Buttons ── */
+.btn {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  padding: 7px 16px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.34,1.56,0.64,1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.97) !important; }
+
+.btn-primary {
+  background: var(--accent);
+  color: #061a0e;
+}
+.btn-primary:hover {
+  background: var(--accent2);
+  box-shadow: 0 0 20px rgba(34,212,114,0.35);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1px solid var(--border2);
+}
+.btn-secondary:hover {
+  background: var(--surface3);
+  color: var(--text);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+}
+.btn-ghost:hover { color: var(--text); background: var(--surface2); }
+
+.btn-icon {
+  width: 30px; height: 30px;
+  padding: 0;
+  justify-content: center;
+  background: transparent;
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+.btn-icon:hover { background: var(--surface2); color: var(--text); }
+
+.btn-danger {
+  background: transparent;
+  color: var(--red);
+  border: 1px solid rgba(255,92,92,0.2);
+  padding: 7px 14px;
+  font-size: 12px;
+}
+.btn-danger:hover {
+  background: var(--red-dim);
+  border-color: rgba(255,92,92,0.4);
+}
+
+.btn-sm { padding: 5px 12px; font-size: 11px; }
+
+/* ── Layout ── */
+.layout {
+  display: grid;
+  grid-template-columns: 256px 1fr;
+  height: calc(100vh - 56px);
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Sidebar ── */
+aside {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 14px 12px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sidebar-search {
+  flex: 1;
+  position: relative;
+}
+.sidebar-search input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Figtree', sans-serif;
+  font-size: 12px;
+  padding: 6px 10px 6px 30px;
+  outline: none;
+  transition: all 0.15s;
+}
+.sidebar-search input:focus {
+  border-color: var(--accent);
+  background: var(--surface3);
+}
+.sidebar-search input::placeholder { color: var(--muted); }
+.sidebar-search-icon {
+  position: absolute;
+  left: 9px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.sidebar-section-label {
+  padding: 10px 14px 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.product-list { padding: 4px 8px 8px; flex: 1; }
+
+.product-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.12s;
+  border: 1px solid transparent;
+  margin-bottom: 1px;
+  position: relative;
+}
+.product-item:hover { background: var(--surface2); }
+.product-item.active {
+  background: var(--pill-bg);
+  border-color: var(--pill-border);
+}
+.product-item.active::before {
+  content: '';
+  position: absolute;
+  left: -8px; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 18px;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+  box-shadow: 2px 0 8px rgba(34,212,114,0.4);
+}
+
+.product-emoji-wrap {
+  width: 34px; height: 34px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.product-item.active .product-emoji-wrap {
+  background: var(--pill-bg);
+  border-color: var(--pill-border);
+}
+
+.product-item-info { min-width: 0; flex: 1; }
+.product-item-name {
+  font-family: 'Figtree', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+.product-item-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.product-item-indicators {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.ind-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+}
+
+.sidebar-footer {
+  border-top: 1px solid var(--border);
+  padding: 10px 8px;
+}
+.sidebar-add-btn {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px dashed var(--border2);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-family: 'Figtree', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: all 0.15s;
+}
+.sidebar-add-btn:hover {
+  background: var(--pill-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Main ── */
+main {
+  overflow-y: auto;
+  background: var(--bg2);
+}
+
+.editor-inner {
+  max-width: 900px;
+  padding: 28px 32px 60px;
+  margin: 0 auto;
+  animation: fade-in 0.2s ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Product header ── */
+.product-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 16px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.product-title-group { display: flex; align-items: center; gap: 14px; }
+
+.product-emoji-large {
+  width: 56px; height: 56px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow);
+}
+
+.product-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+.product-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+.meta-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+}
+.meta-chip.type-nuts { background: rgba(34,212,114,0.08); border-color: rgba(34,212,114,0.2); color: var(--accent); }
+.meta-chip.type-seeds { background: rgba(245,166,35,0.08); border-color: rgba(245,166,35,0.2); color: var(--amber); }
+.meta-chip.type-mix { background: rgba(199,125,255,0.08); border-color: rgba(199,125,255,0.2); color: var(--purple); }
+
+.header-actions-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.badge-preview-large {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 1px;
+}
+
+.unsaved-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--amber-dim);
+  border: 1px solid rgba(245,166,35,0.25);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--amber);
+}
+.unsaved-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--amber);
+  box-shadow: 0 0 5px var(--amber);
+  animation: blink 1.5s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
+
+/* ── Sections ── */
+.section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.section:hover { box-shadow: 0 0 0 1px var(--border2); }
+
+.section-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: default;
+}
+
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text);
+}
+
+.section-icon {
+  width: 22px; height: 22px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+}
+
+.section-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.section-body { padding: 18px; }
+
+/* ── Price grid ── */
+.price-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.price-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  transition: all 0.2s;
+  position: relative;
+}
+.price-card:hover { border-color: var(--border2); }
+.price-card:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.price-card.is-default {
+  border-color: var(--accent-dim);
+  background: var(--pill-bg);
+}
+
+.price-card-weight {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.default-chip {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--accent);
+  color: #061a0e;
+  font-size: 8px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.price-field-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+}
+
+.price-input-wrap { position: relative; margin-bottom: 10px; }
+.price-prefix {
+  position: absolute;
+  left: 9px; top: 50%;
+  transform: translateY(-50%);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  pointer-events: none;
+  font-weight: 500;
+}
+.price-input-wrap input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 8px 7px 30px;
+  outline: none;
+  transition: all 0.15s;
+  -moz-appearance: textfield;
+}
+.price-input-wrap input::-webkit-outer-spin-button,
+.price-input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.price-input-wrap input:focus { border-color: var(--accent); background: var(--surface2); }
+
+.price-input-wrap.old-price input {
+  font-size: 11px;
+  opacity: 0.65;
+  padding: 5px 8px 5px 30px;
+  background: var(--bg);
+}
+.price-input-wrap.old-price input:focus { opacity: 1; }
+
+.price-badge {
+  position: absolute;
+  right: 8px; top: 8px;
+  width: 16px; height: 16px;
+  background: var(--amber-dim);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px;
+}
+.price-badge.visible { display: flex; }
+.price-badge:not(.visible) { display: none; }
+
+/* ── Computed display ── */
+.discount-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--amber);
+  background: var(--amber-dim);
+  border: 1px solid rgba(245,166,35,0.2);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-top: 4px;
+  display: inline-block;
+}
+
+/* ── Form fields ── */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.form-row:last-child { margin-bottom: 0; }
+.form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+.form-row.quad   { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+.field label {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+}
+
+input.text-input, select.sel, textarea.text-area {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Figtree', sans-serif;
+  font-size: 13px;
+  padding: 8px 12px;
+  outline: none;
+  transition: all 0.15s;
+}
+input.text-input:focus, select.sel:focus, textarea.text-area:focus {
+  border-color: var(--accent);
+  background: var(--surface3);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+input.text-input::placeholder { color: var(--muted); }
+select.sel { appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a7490'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+textarea.text-area { min-height: 80px; resize: vertical; }
+
+/* ── Badge selector ── */
+.badge-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.badge-opt {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 2px solid transparent;
+  letter-spacing: 0.8px;
+  transition: all 0.15s;
+  opacity: 0.5;
+}
+.badge-opt:hover { opacity: 0.8; transform: translateY(-1px); }
+.badge-opt.selected { opacity: 1; border-color: white; box-shadow: 0 2px 10px rgba(255,255,255,0.15); }
+.badge-opt.badge-none { background: var(--surface2); color: var(--text2); border-color: var(--border) !important; }
+.badge-opt.badge-none.selected { border-color: var(--muted) !important; opacity: 1; }
+
+/* ── Default weight selector ── */
+.weight-btns {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.weight-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.weight-btn:hover { border-color: var(--accent); color: var(--text); }
+.weight-btn.active {
+  background: var(--pill-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 10px rgba(34,212,114,0.15);
+}
+
+/* ── Nutrition grid ── */
+.nutrition-grid {
+  display: grid;
+  grid-template-columns: repeat(5,1fr);
+  gap: 10px;
+}
+.nutri-cell {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  text-align: center;
+}
+.nutri-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.nutri-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  cursor: text;
+}
+.nutri-input::placeholder { color: var(--border2); }
+.nutri-cell:focus-within {
+  border-color: var(--accent);
+  background: var(--pill-bg);
+}
+
+/* ── Benefits ── */
+.benefits-list { display: flex; flex-direction: column; gap: 8px; }
+.benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+.benefit-item input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: 'Figtree', sans-serif;
+  font-size: 13px;
+}
+.benefit-drag {
+  color: var(--muted);
+  cursor: grab;
+  font-size: 12px;
+  user-select: none;
+}
+.benefit-remove {
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  transition: color 0.15s;
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  line-height: 1;
+}
+.benefit-remove:hover { color: var(--red); }
+
+.add-benefit-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: var(--surface2);
+  border: 1px dashed var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  color: var(--muted);
+  font-family: 'Figtree', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.add-benefit-btn:hover {
+  background: var(--pill-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Price summary ── */
+.price-summary {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.price-summary-item { text-align: center; }
+.price-summary-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+}
+.price-summary-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* ── JSON Preview modal ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(8px);
+  z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  animation: modal-in 0.2s ease;
+}
+@keyframes modal-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 800px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  animation: modal-slide 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes modal-slide {
+  from { transform: scale(0.94) translateY(20px); }
+  to   { transform: scale(1) translateY(0); }
+}
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+pre {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  line-height: 1.65;
+  padding: 20px;
+  overflow-y: auto;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-all;
+  flex: 1;
+}
+
+.j-key   { color: #79c0ff; }
+.j-str   { color: #a5d6ff; }
+.j-num   { color: #ffa657; }
+.j-null  { color: var(--muted); }
+.j-bool  { color: var(--purple); }
+
+/* ── Welcome / Stats ── */
+.welcome-header {
+  margin-bottom: 32px;
+}
+.welcome-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.welcome-eyebrow::before {
+  content: '';
+  width: 20px; height: 1px;
+  background: var(--accent);
+  display: inline-block;
+}
+.welcome-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+.welcome-sub {
+  color: var(--text2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); }
+.stat-card:hover::before { opacity: 1; }
+.stat-card.c-green::before { background: radial-gradient(ellipse at top left, rgba(34,212,114,0.05), transparent 60%); }
+.stat-card.c-amber::before { background: radial-gradient(ellipse at top left, rgba(245,166,35,0.05), transparent 60%); }
+.stat-card.c-blue::before  { background: radial-gradient(ellipse at top left, rgba(77,166,255,0.05), transparent 60%); }
+.stat-card.c-purple::before{ background: radial-gradient(ellipse at top left, rgba(199,125,255,0.05), transparent 60%); }
+
+.stat-icon {
+  font-size: 20px;
+  margin-bottom: 10px;
+  display: block;
+}
+.stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+}
+.stat-card.c-green .stat-value { color: var(--accent); }
+.stat-card.c-amber .stat-value { color: var(--amber); }
+.stat-card.c-blue  .stat-value { color: var(--blue); }
+.stat-card.c-purple.stat-value { color: var(--purple); }
+
+/* ── Import/export cards ── */
+.action-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  margin-bottom: 14px;
+  transition: border-color 0.2s;
+}
+.action-card:hover { border-color: var(--border2); }
+
+.action-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.action-card-icon {
+  width: 38px; height: 38px;
+  border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.action-card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+}
+.action-card-desc {
+  color: var(--text2);
+  font-size: 13px;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+.action-card-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.upload-area {
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius);
+  padding: 32px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 14px;
+}
+.upload-area:hover, .upload-area.drag-over {
+  border-color: var(--accent);
+  background: var(--pill-bg);
+}
+.upload-area:hover .upload-icon { transform: scale(1.1); }
+.upload-icon { font-size: 28px; margin-bottom: 10px; transition: transform 0.2s; display: block; }
+.upload-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.upload-sub { font-size: 12px; color: var(--muted); }
+
+/* ── Toast ── */
+#toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-family: 'Figtree', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(80px) scale(0.95);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 320px;
+}
+#toast.show { transform: translateY(0) scale(1); opacity: 1; }
+.toast-icon {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--accent-glow);
+  border: 1px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ── Section divider ── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 20px 0;
+}
+
+/* ── Keyboard shortcut hints ── */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+/* ── Bottom bar ── */
+.editor-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 24px;
+  margin-bottom: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.footer-left { display: flex; align-items: center; gap: 10px; }
+.footer-right { display: flex; gap: 10px; }
+
+/* ── Empty / loading ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 14px;
+  color: var(--muted);
+  text-align: center;
+}
+.empty-emoji { font-size: 48px; opacity: 0.3; }
+.empty-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text2);
+}
+.empty-sub { font-size: 13px; max-width: 280px; line-height: 1.6; }
+
+/* ── Contextual tip ── */
+.tip-bar {
+  background: var(--blue-dim);
+  border: 1px solid rgba(77,166,255,0.2);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--blue);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  aside { height: auto; max-height: 200px; }
+  .price-grid { grid-template-columns: repeat(3, 1fr); }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .nutrition-grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">🥜</div>
+    GT Nutri Bites
+    <span class="logo-sep">/</span>
+    <span class="logo-module">price-manager</span>
+  </div>
+  <div class="header-center">
+    <div class="header-pill">
+      <div class="header-pill-dot"></div>
+      <span id="productCountTag">0 products</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-ghost btn-sm" onclick="loadDefaultData()">↺ Reset</button>
+    <button class="btn btn-secondary btn-sm" onclick="showJSONPreview()">{ } JSON</button>
+    <button class="btn btn-primary btn-sm" onclick="exportJSON()">↓ Export</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <aside>
+    <div class="sidebar-header">
+      <div class="sidebar-search">
+        <span class="sidebar-search-icon">⌕</span>
+        <input type="text" id="sidebarSearch" placeholder="Search products…" oninput="filterProducts(this.value)" />
+      </div>
+      <button class="btn btn-icon" onclick="addProduct()" title="Add product">+</button>
+    </div>
+
+    <div id="productList" class="product-list"></div>
+
+    <div class="sidebar-footer">
+      <button class="sidebar-add-btn" onclick="addProduct()">
+        <span style="font-size:16px;line-height:1;">+</span>
+        Add New Product
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Main ── -->
+  <main id="mainPanel">
+    <div class="editor-inner" id="editorInner">
+
+      <!-- Welcome view -->
+      <div id="welcomeView">
+        <div class="welcome-header">
+          <div class="welcome-eyebrow">GT Nutri Bites</div>
+          <div class="welcome-title">Price Manager</div>
+          <div class="welcome-sub">
+            Edit product prices, badges, and metadata. Export <code>products.json</code> to deploy changes to your storefront.
+          </div>
+        </div>
+
+        <div class="stats-grid" id="statsBar">
+          <div class="stat-card c-green">
+            <span class="stat-icon">📦</span>
+            <div class="stat-label">Total Products</div>
+            <div class="stat-value" id="statTotal">—</div>
+          </div>
+          <div class="stat-card c-amber">
+            <span class="stat-icon">🏷️</span>
+            <div class="stat-label">On Sale</div>
+            <div class="stat-value" id="statSale">—</div>
+          </div>
+          <div class="stat-card c-blue">
+            <span class="stat-icon">🥜</span>
+            <div class="stat-label">Nuts</div>
+            <div class="stat-value" id="statNuts">—</div>
+          </div>
+          <div class="stat-card c-purple">
+            <span class="stat-icon">🌾</span>
+            <div class="stat-label">Seeds & Mixes</div>
+            <div class="stat-value" id="statOther">—</div>
+          </div>
+        </div>
+
+        <div class="action-card">
+          <div class="action-card-header">
+            <div class="action-card-icon" style="background:rgba(77,166,255,0.1);">📥</div>
+            <div class="action-card-title">Import products.json</div>
+          </div>
+          <div class="action-card-desc">Drag & drop or click to load your existing products.json file. All products will be loaded for editing.</div>
+          <div class="upload-area" id="dropZone"
+               onclick="document.getElementById('fileInput').click()"
+               ondragover="handleDragOver(event)"
+               ondragleave="handleDragLeave(event)"
+               ondrop="handleDrop(event)">
+            <span class="upload-icon">📂</span>
+            <div class="upload-title">Drop products.json here</div>
+            <div class="upload-sub">or click to browse — .json files only</div>
+          </div>
+          <input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFileInput(event)" />
+        </div>
+
+        <div class="action-card">
+          <div class="action-card-header">
+            <div class="action-card-icon" style="background:rgba(34,212,114,0.1);">🚀</div>
+            <div class="action-card-title">Export & Deploy</div>
+          </div>
+          <div class="action-card-desc">Export the updated JSON and replace <code>data/products.json</code> in your repository to deploy changes.</div>
+          <div class="action-card-actions">
+            <button class="btn btn-primary" onclick="exportJSON()">↓ Download products.json</button>
+            <button class="btn btn-secondary" onclick="showJSONPreview()">{ } Preview JSON</button>
+            <button class="btn btn-secondary" onclick="copyJSON()">⎘ Copy JSON</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Product editor -->
+      <div id="productEditor" style="display:none;"></div>
+
+    </div>
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast">
+  <div class="toast-icon">✓</div>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Data
+// ─────────────────────────────────────────────────────────────────────────────
+const DEFAULT_DATA = {
+  "weightOptions":["100g","250g","500g","750g","1kg"],
+  "products":[
+    {"id":1,"name":"Premium California Almonds","category":"Organic Almonds","type":"nuts","price":6267,"oldPrice":8247,"weight":"500g","weightVariants":{"100g":{"price":1320,"oldPrice":1738},"250g":{"price":3190,"oldPrice":4202},"500g":{"price":6267,"oldPrice":8247},"750g":{"price":9240,"oldPrice":12166},"1kg":{"price":12100,"oldPrice":15928}},"badge":"BEST SELLER","badgeColor":"bg-green-700","description":"Raw, unsalted, and packed with nutrients","fullDescription":"Our Premium California Almonds are sourced directly from sustainable farms in California. These raw, unsalted almonds are carefully selected for their superior quality and freshness.","benefits":["High in Vitamin E","Rich in healthy fats","Good source of protein","Contains magnesium and fiber"],"nutrition":{"calories":"170 per 28g","protein":"6g","fat":"15g","carbs":"6g","fiber":"3.5g"},"emoji":"🥜","useEmoji":true},
+    {"id":2,"name":"Chia Seeds Super Pack","category":"Organic Seeds","type":"seeds","price":4947,"oldPrice":null,"weight":"400g","weightVariants":{"100g":{"price":1320,"oldPrice":null},"250g":{"price":3135,"oldPrice":null},"500g":{"price":6160,"oldPrice":null},"750g":{"price":9075,"oldPrice":null},"1kg":{"price":11880,"oldPrice":null}},"badge":"NEW","badgeColor":"bg-amber-500","description":"Omega-3 rich superfood","fullDescription":"Experience the power of ancient nutrition with our Chia Seeds Super Pack.","benefits":["Extremely high in Omega-3","Loaded with antioxidants","High in quality protein","May reduce heart disease risk"],"nutrition":{"calories":"138 per 28g","protein":"4.7g","fat":"8.7g","carbs":"12g","fiber":"9.8g"},"emoji":"🫘","useEmoji":true},
+    {"id":3,"name":"Roasted Cashews","category":"Premium Nuts","type":"nuts","price":7587,"oldPrice":null,"weight":"600g","weightVariants":{"100g":{"price":1408,"oldPrice":null},"250g":{"price":3410,"oldPrice":null},"500g":{"price":6710,"oldPrice":null},"750g":{"price":9900,"oldPrice":null},"1kg":{"price":12980,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Lightly salted perfection","fullDescription":"Indulge in our perfectly roasted cashews, lightly salted to enhance their natural buttery flavor.","benefits":["Heart-healthy fats","Rich in copper and magnesium","Supports bone health","May help with weight management"],"nutrition":{"calories":"157 per 28g","protein":"5g","fat":"12g","carbs":"9g","fiber":"1g"},"emoji":"🥜","useEmoji":true},
+    {"id":4,"name":"Energy Boost Mix","category":"Trail Mix","type":"mix","price":5607,"oldPrice":7257,"weight":"450g","weightVariants":{"100g":{"price":1320,"oldPrice":1705},"250g":{"price":3190,"oldPrice":4125},"500g":{"price":6270,"oldPrice":8085},"750g":{"price":9240,"oldPrice":11935},"1kg":{"price":12100,"oldPrice":15620}},"badge":"SALE","badgeColor":"bg-red-600","description":"Perfect blend of nuts & dried fruits","fullDescription":"Our signature Energy Boost Mix combines premium almonds, cashews, dried cranberries, and raisins.","benefits":["Quick energy source","Balanced nutrients","Great for active lifestyles","Natural ingredients only"],"nutrition":{"calories":"150 per 30g","protein":"4g","fat":"8g","carbs":"16g","fiber":"2g"},"emoji":"🍇","useEmoji":true},
+    {"id":5,"name":"Sunflower Seeds","category":"Premium Seeds","type":"seeds","price":4287,"oldPrice":null,"weight":"350g","weightVariants":{"100g":{"price":1254,"oldPrice":null},"250g":{"price":3025,"oldPrice":null},"500g":{"price":5940,"oldPrice":null},"750g":{"price":8745,"oldPrice":null},"1kg":{"price":11440,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Roasted & lightly salted","fullDescription":"Our premium sunflower seeds are lightly roasted and salted to perfection.","benefits":["High in Vitamin E","Rich in selenium","Anti-inflammatory properties","Supports immune health"],"nutrition":{"calories":"165 per 28g","protein":"5.5g","fat":"14g","carbs":"7g","fiber":"3g"},"emoji":"🌻","useEmoji":true},
+    {"id":6,"name":"Raw Walnuts","category":"Organic Nuts","type":"nuts","price":6597,"oldPrice":null,"weight":"500g","weightVariants":{"100g":{"price":1386,"oldPrice":null},"250g":{"price":3355,"oldPrice":null},"500g":{"price":6597,"oldPrice":null},"750g":{"price":9735,"oldPrice":null},"1kg":{"price":12760,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Heart-healthy omega-3","fullDescription":"Our raw organic walnuts are nature's brain food.","benefits":["Rich in Omega-3 ALA","Supports brain health","Anti-inflammatory","Good for heart health"],"nutrition":{"calories":"185 per 28g","protein":"4.3g","fat":"18.5g","carbs":"4g","fiber":"1.9g"},"emoji":"🧠","useEmoji":true},
+    {"id":7,"name":"Pumpkin Seeds","category":"Superfood Seeds","type":"seeds","price":4617,"oldPrice":null,"weight":"400g","weightVariants":{"100g":{"price":1232,"oldPrice":null},"250g":{"price":2970,"oldPrice":null},"500g":{"price":5830,"oldPrice":null},"750g":{"price":8580,"oldPrice":null},"1kg":{"price":11220,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"High in zinc & magnesium","fullDescription":"Our premium pumpkin seeds are a nutritional powerhouse.","benefits":["High in zinc and magnesium","Supports prostate health","Rich in antioxidants","May improve sleep quality"],"nutrition":{"calories":"151 per 28g","protein":"7g","fat":"13g","carbs":"5g","fiber":"1.7g"},"emoji":"🎃","useEmoji":true},
+    {"id":8,"name":"Deluxe Nut Mix","category":"Premium Mix","type":"mix","price":8247,"oldPrice":null,"weight":"600g","weightVariants":{"100g":{"price":1452,"oldPrice":null},"250g":{"price":3520,"oldPrice":null},"500g":{"price":6930,"oldPrice":null},"750g":{"price":10230,"oldPrice":null},"1kg":{"price":13420,"oldPrice":null}},"badge":"ORGANIC","badgeColor":"bg-green-600","description":"Almonds, cashews & pistachios","fullDescription":"Our Deluxe Nut Mix features a premium blend of organic almonds, cashews, and pistachios.","benefits":["Variety of nutrients","Premium organic quality","Heart-healthy fats","Perfect for entertaining"],"nutrition":{"calories":"170 per 28g","protein":"5.5g","fat":"15g","carbs":"7g","fiber":"2.5g"},"emoji":"🥗","useEmoji":true},
+    {"id":9,"name":"Premium Pistachios","category":"Gourmet Nuts","type":"nuts","price":7257,"oldPrice":null,"weight":"450g","weightVariants":{"100g":{"price":1694,"oldPrice":null},"250g":{"price":4103,"oldPrice":null},"500g":{"price":8074,"oldPrice":null},"750g":{"price":11913,"oldPrice":null},"1kg":{"price":15620,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Roasted & lightly salted green gems","fullDescription":"Our Premium Pistachios are carefully selected from the finest orchards.","benefits":["Rich in antioxidants","Supports eye health","High in protein and fiber","May aid in weight management"],"nutrition":{"calories":"159 per 28g","protein":"6g","fat":"13g","carbs":"8g","fiber":"3g"},"emoji":"💚","useEmoji":true},
+    {"id":10,"name":"Organic Hazelnuts","category":"Premium Nuts","type":"nuts","price":6927,"oldPrice":null,"weight":"500g","weightVariants":{"100g":{"price":1452,"oldPrice":null},"250g":{"price":3520,"oldPrice":null},"500g":{"price":6927,"oldPrice":null},"750g":{"price":10230,"oldPrice":null},"1kg":{"price":13420,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Rich, buttery & heart-healthy","fullDescription":"Our Organic Hazelnuts offer a rich, buttery flavor and satisfying crunch.","benefits":["Extremely high in Vitamin E","Rich in antioxidants","Supports heart health","Good source of folate"],"nutrition":{"calories":"178 per 28g","protein":"4.2g","fat":"17g","carbs":"5g","fiber":"2.7g"},"emoji":"🌰","useEmoji":true},
+    {"id":11,"name":"Macadamia Nuts","category":"Luxury Nuts","type":"nuts","price":8907,"oldPrice":10887,"weight":"400g","weightVariants":{"100g":{"price":2310,"oldPrice":2827},"250g":{"price":5610,"oldPrice":6864},"500g":{"price":11055,"oldPrice":13530},"750g":{"price":16335,"oldPrice":19998},"1kg":{"price":21450,"oldPrice":26268}},"badge":"PREMIUM","badgeColor":"bg-purple-600","description":"Buttery smooth & luxurious","fullDescription":"Experience luxury with our premium Macadamia Nuts.","benefits":["Highest in monounsaturated fats","Supports heart health","Rich in thiamin","Contains manganese"],"nutrition":{"calories":"204 per 28g","protein":"2.2g","fat":"21g","carbs":"4g","fiber":"2.4g"},"emoji":"🤍","useEmoji":true},
+    {"id":12,"name":"Roasted Peanuts","category":"Classic Nuts","type":"nuts","price":3957,"oldPrice":null,"weight":"600g","weightVariants":{"100g":{"price":726,"oldPrice":null},"250g":{"price":1760,"oldPrice":null},"500g":{"price":3465,"oldPrice":null},"750g":{"price":5115,"oldPrice":null},"1kg":{"price":6710,"oldPrice":null}},"badge":"VALUE PACK","badgeColor":"bg-blue-600","description":"Classic favorite, protein-packed","fullDescription":"Our Roasted Peanuts are a timeless classic!","benefits":["High in protein","Rich in healthy fats","Good source of biotin","Contains resveratrol"],"nutrition":{"calories":"161 per 28g","protein":"7.3g","fat":"14g","carbs":"5g","fiber":"2.4g"},"emoji":"🥜","useEmoji":true},
+    {"id":13,"name":"Organic Flax Seeds","category":"Superfood Seeds","type":"seeds","price":4452,"oldPrice":null,"weight":"450g","weightVariants":{"100g":{"price":1056,"oldPrice":null},"250g":{"price":2530,"oldPrice":null},"500g":{"price":4950,"oldPrice":null},"750g":{"price":7260,"oldPrice":null},"1kg":{"price":9460,"oldPrice":null}},"badge":"NEW","badgeColor":"bg-amber-500","description":"Omega-3 powerhouse for wellness","fullDescription":"Our Organic Flax Seeds are a nutritional powerhouse.","benefits":["Richest plant source of Omega-3","High in dietary fiber","Contains lignans","Supports digestive health"],"nutrition":{"calories":"150 per 28g","protein":"5.1g","fat":"12g","carbs":"8g","fiber":"7.6g"},"emoji":"🌾","useEmoji":true}
+  ],
+  "iconColors":{"amber":"text-amber-600","green":"text-green-600","orange":"text-orange-600","purple":"text-purple-600","yellow":"text-yellow-700","red":"text-red-700","lime":"text-lime-700","pink":"text-pink-700"}
+};
+
+const BADGE_OPTIONS = [
+  { label: "None",        color: null,           style: "" },
+  { label: "BEST SELLER", color: "bg-green-700", style: "background:#15803d;color:#fff" },
+  { label: "NEW",         color: "bg-amber-500", style: "background:#f59e0b;color:#000" },
+  { label: "SALE",        color: "bg-red-600",   style: "background:#dc2626;color:#fff" },
+  { label: "ORGANIC",     color: "bg-green-600", style: "background:#16a34a;color:#fff" },
+  { label: "PREMIUM",     color: "bg-purple-600",style: "background:#9333ea;color:#fff" },
+  { label: "VALUE PACK",  color: "bg-blue-600",  style: "background:#2563eb;color:#fff" },
+];
+
+const WEIGHTS = ["100g","250g","500g","750g","1kg"];
+
+let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+let currentId = null;
+let unsaved = {};
+let searchQuery = '';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────────────────────────────────────
+function init() {
+  renderSidebar();
+  updateStats();
+  selectProduct(data.products[0].id);
+  setupKeyboard();
+}
+
+function loadDefaultData() {
+  data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  unsaved = {};
+  currentId = null;
+  searchQuery = '';
+  document.getElementById('sidebarSearch').value = '';
+  renderSidebar();
+  updateStats();
+  selectProduct(data.products[0].id);
+  toast('↺ Data reset to defaults');
+}
+
+function setupKeyboard() {
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      exportJSON();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      document.getElementById('sidebarSearch').focus();
+    }
+    // Arrow keys to navigate products
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      const filtered = getFilteredProducts();
+      const idx = filtered.findIndex(p => p.id === currentId);
+      if (e.key === 'ArrowDown' && idx < filtered.length - 1) selectProduct(filtered[idx+1].id);
+      if (e.key === 'ArrowUp' && idx > 0) selectProduct(filtered[idx-1].id);
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sidebar
+// ─────────────────────────────────────────────────────────────────────────────
+function getFilteredProducts() {
+  if (!searchQuery) return data.products;
+  const q = searchQuery.toLowerCase();
+  return data.products.filter(p =>
+    p.name.toLowerCase().includes(q) ||
+    p.category.toLowerCase().includes(q) ||
+    p.type.toLowerCase().includes(q)
+  );
+}
+
+function filterProducts(query) {
+  searchQuery = query;
+  renderSidebar();
+}
+
+function renderSidebar() {
+  const list = document.getElementById('productList');
+  const tag  = document.getElementById('productCountTag');
+  tag.textContent = `${data.products.length} products`;
+
+  const filtered = getFilteredProducts();
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="padding:24px 14px;text-align:center;color:var(--muted);font-size:12px;">No products match<br>"${escHtml(searchQuery)}"</div>`;
+    return;
+  }
+
+  // Group by type
+  const groups = { nuts: [], seeds: [], mix: [] };
+  filtered.forEach(p => {
+    if (groups[p.type]) groups[p.type].push(p);
+    else groups.mix.push(p);
+  });
+
+  const typeLabels = { nuts: 'Nuts', seeds: 'Seeds', mix: 'Mixes' };
+  let html = '';
+
+  for (const [type, products] of Object.entries(groups)) {
+    if (products.length === 0) continue;
+    html += `<div class="sidebar-section-label">${typeLabels[type]}</div>`;
+    products.forEach(p => {
+      const hasSale = p.oldPrice !== null;
+      const isUnsaved = unsaved[p.id];
+      html += `
+      <div class="product-item${currentId === p.id ? ' active' : ''}" onclick="selectProduct(${p.id})" id="sidebar-${p.id}">
+        <div class="product-emoji-wrap">${p.emoji}</div>
+        <div class="product-item-info">
+          <div class="product-item-name">${escHtml(p.name)}</div>
+          <div class="product-item-meta">${p.type} · ${formatPrice(p.price)}</div>
+        </div>
+        <div class="product-item-indicators">
+          ${hasSale ? `<div class="ind-dot" style="background:var(--amber);box-shadow:0 0 4px var(--amber);" title="On sale"></div>` : ''}
+          ${isUnsaved ? `<div class="ind-dot" style="background:var(--blue);box-shadow:0 0 4px var(--blue);" title="Unsaved changes"></div>` : ''}
+          ${p.badge ? `<div class="ind-dot" style="background:var(--purple);box-shadow:0 0 4px var(--purple);" title="${p.badge}"></div>` : ''}
+        </div>
+      </div>`;
+    });
+  }
+
+  list.innerHTML = html;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stats
+// ─────────────────────────────────────────────────────────────────────────────
+function updateStats() {
+  const products = data.products;
+  document.getElementById('statTotal').textContent  = products.length;
+  document.getElementById('statSale').textContent   = products.filter(p => p.oldPrice !== null).length;
+  document.getElementById('statNuts').textContent   = products.filter(p => p.type === 'nuts').length;
+  document.getElementById('statOther').textContent  = products.filter(p => p.type !== 'nuts').length;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Select product
+// ─────────────────────────────────────────────────────────────────────────────
+function selectProduct(id) {
+  currentId = id;
+  const p = data.products.find(x => x.id === id);
+  if (!p) return;
+
+  document.querySelectorAll('.product-item').forEach(el => el.classList.remove('active'));
+  const sideEl = document.getElementById(`sidebar-${id}`);
+  if (sideEl) {
+    sideEl.classList.add('active');
+    sideEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  document.getElementById('welcomeView').style.display = 'none';
+  document.getElementById('productEditor').style.display = 'block';
+
+  renderEditor(p);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Render editor
+// ─────────────────────────────────────────────────────────────────────────────
+function renderEditor(p) {
+  const badgeStyle = getBadgeStyle(p.badge, p.badgeColor);
+  const defaultVariant = p.weightVariants[p.weight] || { price: 0, oldPrice: null };
+  const discountPct = defaultVariant.oldPrice
+    ? Math.round((1 - defaultVariant.price / defaultVariant.oldPrice) * 100)
+    : null;
+
+  // Price cards
+  const weightCardsHTML = WEIGHTS.map(w => {
+    const v = p.weightVariants[w] || { price: 0, oldPrice: null };
+    const isDefault = p.weight === w;
+    const disc = v.oldPrice ? Math.round((1 - v.price / v.oldPrice) * 100) : null;
+    return `
+    <div class="price-card${isDefault ? ' is-default' : ''}">
+      <div class="price-card-weight">
+        <span>${w}</span>
+        ${isDefault ? `<span class="default-chip">DEFAULT</span>` : ''}
+      </div>
+      <div class="price-field-label">Current Price</div>
+      <div class="price-input-wrap">
+        <span class="price-prefix">Rs.</span>
+        <input type="number" min="0" step="1"
+          value="${v.price || ''}" placeholder="0"
+          oninput="updateWeightPrice(${p.id},'${w}','price',this.value)" />
+      </div>
+      <div class="price-field-label">Strikethrough Price</div>
+      <div class="price-input-wrap old-price">
+        <span class="price-prefix">Rs.</span>
+        <input type="number" min="0" step="1"
+          value="${v.oldPrice !== null ? v.oldPrice : ''}" placeholder="none"
+          oninput="updateWeightPrice(${p.id},'${w}','oldPrice',this.value)" />
+      </div>
+      ${disc ? `<div class="discount-badge">−${disc}% off</div>` : ''}
+    </div>`;
+  }).join('');
+
+  // Badge options
+  const badgeOptsHTML = BADGE_OPTIONS.map(b => {
+    const isSelected = (b.label === 'None' && !p.badge) || (p.badge === b.label);
+    return `<span class="badge-opt ${b.label === 'None' ? 'badge-none' : ''} ${isSelected ? 'selected' : ''}"
+      style="${b.style}"
+      onclick="updateBadge(${p.id},'${b.label}','${b.color || ''}')">${b.label}</span>`;
+  }).join('');
+
+  // Weight buttons
+  const weightBtnsHTML = WEIGHTS.map(w =>
+    `<button class="weight-btn${p.weight === w ? ' active' : ''}"
+      onclick="updateDefaultWeight(${p.id},'${w}')">${w}</button>`
+  ).join('');
+
+  // Benefits
+  const benefitsHTML = (p.benefits || []).map((b, i) => `
+    <div class="benefit-item" id="benefit-${p.id}-${i}">
+      <span class="benefit-drag">⠿</span>
+      <input type="text" value="${escHtml(b)}" placeholder="Benefit…"
+        oninput="updateBenefit(${p.id},${i},this.value)" />
+      <button class="benefit-remove" onclick="removeBenefit(${p.id},${i})" title="Remove">×</button>
+    </div>`
+  ).join('');
+
+  // Nutrition
+  const nutri = p.nutrition || {};
+  const nutriFields = [
+    { key: 'calories', label: 'Calories' },
+    { key: 'protein',  label: 'Protein' },
+    { key: 'fat',      label: 'Fat' },
+    { key: 'carbs',    label: 'Carbs' },
+    { key: 'fiber',    label: 'Fiber' },
+  ];
+  const nutriHTML = nutriFields.map(f => `
+    <div class="nutri-cell">
+      <div class="nutri-label">${f.label}</div>
+      <input class="nutri-input" type="text"
+        value="${escHtml(nutri[f.key] || '')}" placeholder="—"
+        oninput="updateNutrition(${p.id},'${f.key}',this.value)" />
+    </div>`
+  ).join('');
+
+  document.getElementById('productEditor').innerHTML = `
+    <div class="product-header">
+      <div class="product-title-group">
+        <div class="product-emoji-large">${p.emoji}</div>
+        <div>
+          <div class="product-title">${escHtml(p.name)}</div>
+          <div class="product-meta">
+            <span class="meta-chip">#${p.id}</span>
+            <span class="meta-chip">${escHtml(p.category)}</span>
+            <span class="meta-chip type-${p.type}">${p.type}</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions-right">
+        ${p.badge ? `<span class="badge-preview-large" style="${badgeStyle}">${p.badge}</span>` : ''}
+        ${unsaved[p.id] ? `<div class="unsaved-pill"><span class="unsaved-dot"></span>unsaved changes</div>` : ''}
+        ${discountPct ? `<div class="unsaved-pill" style="background:rgba(245,166,35,0.1);border-color:rgba(245,166,35,0.3);color:var(--amber);">−${discountPct}% on ${p.weight}</div>` : ''}
+      </div>
+    </div>
+
+    <!-- Price summary row -->
+    <div class="price-summary" style="margin-bottom:16px;">
+      <div class="price-summary-item">
+        <div class="price-summary-label">Current Price (${p.weight})</div>
+        <div class="price-summary-value" style="color:var(--accent);">Rs. ${formatPrice(p.price)}</div>
+      </div>
+      ${p.oldPrice ? `
+      <div class="price-summary-item">
+        <div class="price-summary-label">Was</div>
+        <div class="price-summary-value" style="color:var(--muted);text-decoration:line-through;font-size:15px;">Rs. ${formatPrice(p.oldPrice)}</div>
+      </div>
+      <div class="price-summary-item">
+        <div class="price-summary-label">Saving</div>
+        <div class="price-summary-value" style="color:var(--amber);">Rs. ${formatPrice(p.oldPrice - p.price)}</div>
+      </div>` : ''}
+      <div class="price-summary-item">
+        <div class="price-summary-label">Default Weight</div>
+        <div class="price-summary-value" style="font-size:16px;">${p.weight}</div>
+      </div>
+      <div class="price-summary-item">
+        <div class="price-summary-label">Badge</div>
+        <div class="price-summary-value" style="font-size:14px;">${p.badge || '—'}</div>
+      </div>
+    </div>
+
+    <!-- Weight prices -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-icon" style="background:rgba(34,212,114,0.1);">💰</div>
+          Weight Variant Prices
+        </div>
+        <span class="section-meta">All prices in LKR · leave strikethrough empty for no sale</span>
+      </div>
+      <div class="section-body">
+        <div class="price-grid">${weightCardsHTML}</div>
+      </div>
+    </div>
+
+    <!-- Default weight -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-icon" style="background:rgba(77,166,255,0.1);">⚖️</div>
+          Default Display Weight
+        </div>
+      </div>
+      <div class="section-body">
+        <div style="margin-bottom:12px;font-size:13px;color:var(--text2);">The weight option shown by default on the product card. This sets the displayed price.</div>
+        <div class="weight-btns" id="weightBtns-${p.id}">${weightBtnsHTML}</div>
+      </div>
+    </div>
+
+    <!-- Badge -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-icon" style="background:rgba(199,125,255,0.1);">🏷️</div>
+          Product Badge
+        </div>
+      </div>
+      <div class="section-body">
+        <div style="margin-bottom:12px;font-size:13px;color:var(--text2);">Badge displayed on the product image in the storefront. Select None to hide.</div>
+        <div class="badge-options" id="badgeOpts-${p.id}">${badgeOptsHTML}</div>
+      </div>
+    </div>
+
+    <!-- Product Info -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-icon" style="background:rgba(245,166,35,0.1);">📝</div>
+          Product Information
+        </div>
+      </div>
+      <div class="section-body">
+        <div class="form-row">
+          <div class="field">
+            <label>Product Name</label>
+            <input type="text" class="text-input" value="${escHtml(p.name)}"
+              placeholder="Product name…"
+              oninput="updateField(${p.id},'name',this.value)" />
+          </div>
+          <div class="field">
+            <label>Category</label>
+            <input type="text" class="text-input" value="${escHtml(p.category)}"
+              placeholder="e.g. Organic Nuts"
+              oninput="updateField(${p.id},'category',this.value)" />
+          </div>
+        </div>
+        <div class="form-row quad">
+          <div class="field">
+            <label>Type</label>
+            <select class="sel text-input" onchange="updateField(${p.id},'type',this.value)">
+              <option value="nuts"  ${p.type==='nuts'  ?'selected':''}>🥜 Nuts</option>
+              <option value="seeds" ${p.type==='seeds' ?'selected':''}>🌾 Seeds</option>
+              <option value="mix"   ${p.type==='mix'   ?'selected':''}>🥗 Mix</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Emoji Icon</label>
+            <input type="text" class="text-input" value="${p.emoji}"
+              oninput="updateField(${p.id},'emoji',this.value)"
+              style="font-size:18px;" />
+          </div>
+          <div class="field" style="grid-column:span 2;">
+            <label>Short Description</label>
+            <input type="text" class="text-input" value="${escHtml(p.description)}"
+              placeholder="Brief tagline…"
+              oninput="updateField(${p.id},'description',this.value)" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Full Description</label>
+          <textarea class="text-area" placeholder="Full product description…"
+            oninput="updateField(${p.id},'fullDescription',this.value)">${escHtml(p.fullDescription || '')}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Benefits -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-icon" style="background:rgba(34,212,114,0.1);">✅</div>
+          Key Benefits
+        </div>
+        <span class="section-meta">${(p.benefits || []).length} items</span>
+      </div>
+      <div class="section-body">
+        <div class="benefits-list" id="benefits-${p.id}">${benefitsHTML}</div>
+        <button class="add-benefit-btn" style="margin-top:8px;" onclick="addBenefit(${p.id})">
+          + Add Benefit
+        </button>
+      </div>
+    </div>
+
+    <!-- Nutrition -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">
+          <div class="section-icon" style="background:rgba(77,166,255,0.1);">🔬</div>
+          Nutrition Info
+        </div>
+        <span class="section-meta">per serving</span>
+      </div>
+      <div class="section-body">
+        <div class="nutrition-grid">${nutriHTML}</div>
+      </div>
+    </div>
+
+    <!-- Footer actions -->
+    <div class="editor-footer">
+      <div class="footer-left">
+        <button class="btn btn-danger" onclick="deleteProduct(${p.id})">🗑 Delete Product</button>
+        <button class="btn btn-ghost btn-sm" onclick="duplicateProduct(${p.id})">⎘ Duplicate</button>
+      </div>
+      <div class="footer-right">
+        <button class="btn btn-secondary" onclick="showJSONPreview()">{ } JSON Preview</button>
+        <button class="btn btn-primary" onclick="exportJSON()">↓ Export products.json</button>
+      </div>
+    </div>
+  `;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Update functions
+// ─────────────────────────────────────────────────────────────────────────────
+function getProduct(id) { return data.products.find(p => p.id === id); }
+
+function markUnsaved(id) {
+  unsaved[id] = true;
+  // Update sidebar dot without full re-render
+  const sideEl = document.getElementById(`sidebar-${id}`);
+  if (sideEl) {
+    let inds = sideEl.querySelector('.product-item-indicators');
+    if (inds && !inds.querySelector('[title="Unsaved changes"]')) {
+      const dot = document.createElement('div');
+      dot.className = 'ind-dot';
+      dot.style.background = 'var(--blue)';
+      dot.style.boxShadow = '0 0 4px var(--blue)';
+      dot.title = 'Unsaved changes';
+      inds.appendChild(dot);
+    }
+  }
+}
+
+function updateWeightPrice(id, weight, field, value) {
+  const p = getProduct(id);
+  if (!p) return;
+  if (!p.weightVariants[weight]) p.weightVariants[weight] = { price: null, oldPrice: null };
+  const val = value === '' ? null : parseInt(value, 10);
+  p.weightVariants[weight][field] = (isNaN(val) || val === null) ? null : val;
+
+  if (weight === p.weight) {
+    p.price    = p.weightVariants[weight].price    || 0;
+    p.oldPrice = p.weightVariants[weight].oldPrice || null;
+  }
+
+  markUnsaved(id);
+  updateStats();
+  // Update sidebar price display
+  const sideEl = document.getElementById(`sidebar-${id}`);
+  if (sideEl) {
+    const meta = sideEl.querySelector('.product-item-meta');
+    if (meta) meta.textContent = `${p.type} · ${formatPrice(p.price)}`;
+  }
+  // Update summary row live
+  updatePriceSummaryLive(p);
+}
+
+function updatePriceSummaryLive(p) {
+  // Also update discount badges within price cards
+  document.querySelectorAll('.price-card').forEach((card, i) => {
+    const w = WEIGHTS[i];
+    if (!w) return;
+    const v = p.weightVariants[w];
+    const disc = v && v.oldPrice && v.price ? Math.round((1 - v.price / v.oldPrice) * 100) : null;
+    let badge = card.querySelector('.discount-badge');
+    if (disc) {
+      if (!badge) {
+        badge = document.createElement('div');
+        badge.className = 'discount-badge';
+        card.appendChild(badge);
+      }
+      badge.textContent = `−${disc}% off`;
+    } else if (badge) {
+      badge.remove();
+    }
+  });
+}
+
+function updateDefaultWeight(id, weight) {
+  const p = getProduct(id);
+  if (!p) return;
+  p.weight   = weight;
+  p.price    = (p.weightVariants[weight]?.price)    || 0;
+  p.oldPrice = (p.weightVariants[weight]?.oldPrice) || null;
+  markUnsaved(id);
+  renderEditor(p);
+}
+
+function updateBadge(id, label, colorClass) {
+  const p = getProduct(id);
+  if (!p) return;
+  p.badge      = label === 'None' ? null : label;
+  p.badgeColor = (label === 'None' || !colorClass) ? null : colorClass;
+  markUnsaved(id);
+  renderEditor(p);
+}
+
+function updateField(id, field, value) {
+  const p = getProduct(id);
+  if (!p) return;
+  p[field] = value;
+  markUnsaved(id);
+  if (field === 'name') {
+    const sideEl = document.getElementById(`sidebar-${id}`);
+    if (sideEl) {
+      const nm = sideEl.querySelector('.product-item-name');
+      if (nm) nm.textContent = value || '(unnamed)';
+    }
+    // Update title in editor
+    const titleEl = document.querySelector('.product-title');
+    if (titleEl) titleEl.textContent = value;
+  }
+  if (field === 'emoji') {
+    const sideEl = document.getElementById(`sidebar-${id}`);
+    if (sideEl) {
+      const em = sideEl.querySelector('.product-emoji-wrap');
+      if (em) em.textContent = value;
+    }
+    const bigEmoji = document.querySelector('.product-emoji-large');
+    if (bigEmoji) bigEmoji.textContent = value;
+  }
+  if (field === 'type') {
+    markUnsaved(id);
+    renderSidebar();
+  }
+}
+
+function updateBenefit(id, index, value) {
+  const p = getProduct(id);
+  if (!p || !p.benefits) return;
+  p.benefits[index] = value;
+  markUnsaved(id);
+  // Update count
+  const head = document.querySelector(`#productEditor .section:nth-of-type(5) .section-meta`);
+  if (head) head.textContent = `${p.benefits.length} items`;
+}
+
+function addBenefit(id) {
+  const p = getProduct(id);
+  if (!p) return;
+  if (!p.benefits) p.benefits = [];
+  p.benefits.push('');
+  markUnsaved(id);
+  const container = document.getElementById(`benefits-${id}`);
+  if (!container) return;
+  const i = p.benefits.length - 1;
+  const div = document.createElement('div');
+  div.className = 'benefit-item';
+  div.id = `benefit-${id}-${i}`;
+  div.innerHTML = `
+    <span class="benefit-drag">⠿</span>
+    <input type="text" value="" placeholder="Benefit…"
+      oninput="updateBenefit(${id},${i},this.value)" />
+    <button class="benefit-remove" onclick="removeBenefit(${id},${i})" title="Remove">×</button>`;
+  container.appendChild(div);
+  div.querySelector('input').focus();
+}
+
+function removeBenefit(id, index) {
+  const p = getProduct(id);
+  if (!p || !p.benefits) return;
+  p.benefits.splice(index, 1);
+  markUnsaved(id);
+  // Re-render benefits only
+  const container = document.getElementById(`benefits-${id}`);
+  if (container) {
+    container.innerHTML = p.benefits.map((b, i) => `
+      <div class="benefit-item" id="benefit-${id}-${i}">
+        <span class="benefit-drag">⠿</span>
+        <input type="text" value="${escHtml(b)}" placeholder="Benefit…"
+          oninput="updateBenefit(${id},${i},this.value)" />
+        <button class="benefit-remove" onclick="removeBenefit(${id},${i})" title="Remove">×</button>
+      </div>`).join('');
+  }
+}
+
+function updateNutrition(id, key, value) {
+  const p = getProduct(id);
+  if (!p) return;
+  if (!p.nutrition) p.nutrition = {};
+  p.nutrition[key] = value;
+  markUnsaved(id);
+}
+
+function deleteProduct(id) {
+  if (!confirm('Delete this product? This cannot be undone.')) return;
+  data.products = data.products.filter(p => p.id !== id);
+  delete unsaved[id];
+  renderSidebar();
+  updateStats();
+  if (data.products.length > 0) {
+    selectProduct(data.products[0].id);
+  } else {
+    document.getElementById('productEditor').style.display = 'none';
+    document.getElementById('welcomeView').style.display = 'block';
+  }
+  toast('🗑 Product deleted');
+}
+
+function duplicateProduct(id) {
+  const p = getProduct(id);
+  if (!p) return;
+  const newId = Math.max(...data.products.map(p => p.id)) + 1;
+  const clone = JSON.parse(JSON.stringify(p));
+  clone.id = newId;
+  clone.name = clone.name + ' (Copy)';
+  data.products.push(clone);
+  unsaved[newId] = true;
+  renderSidebar();
+  updateStats();
+  selectProduct(newId);
+  toast('⎘ Product duplicated');
+}
+
+function addProduct() {
+  const newId = Math.max(...data.products.map(p => p.id)) + 1;
+  const newProduct = {
+    id: newId, name: "New Product", category: "Category", type: "nuts",
+    price: 0, oldPrice: null, weight: "500g",
+    weightVariants: {
+      "100g": { price: 0, oldPrice: null }, "250g": { price: 0, oldPrice: null },
+      "500g": { price: 0, oldPrice: null }, "750g": { price: 0, oldPrice: null },
+      "1kg":  { price: 0, oldPrice: null }
+    },
+    badge: null, badgeColor: null,
+    description: "Short description here",
+    fullDescription: "Full product description here.",
+    benefits: ["Benefit 1", "Benefit 2"],
+    nutrition: { calories: "0", protein: "0g", fat: "0g", carbs: "0g", fiber: "0g" },
+    emoji: "🥜", useEmoji: true
+  };
+  data.products.push(newProduct);
+  unsaved[newId] = true;
+  renderSidebar();
+  updateStats();
+  selectProduct(newId);
+  toast('+ New product added');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// JSON preview & export
+// ─────────────────────────────────────────────────────────────────────────────
+function showJSONPreview() {
+  const json = JSON.stringify(buildOutput(), null, 2);
+  const highlighted = syntaxHighlight(json);
+  const lineCount = json.split('\n').length;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span style="font-size:16px;">{ }</span>
+          products.json Preview
+          <span class="section-meta">${lineCount} lines · ${(json.length / 1024).toFixed(1)}kb</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary btn-sm" onclick="copyJSON(); this.textContent='✓ Copied!'">⎘ Copy</button>
+          <button class="btn btn-primary btn-sm" onclick="exportJSON()">↓ Download</button>
+          <button class="btn btn-icon" onclick="this.closest('.modal-overlay').remove()">✕</button>
+        </div>
+      </div>
+      <pre>${highlighted}</pre>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  overlay.addEventListener('keydown', e => { if (e.key === 'Escape') overlay.remove(); });
+}
+
+function syntaxHighlight(json) {
+  return json
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(\.\d+)?([eE][+-]?\d+)?)/g, match => {
+      let cls = 'j-num';
+      if (/^"/.test(match)) { cls = /:$/.test(match) ? 'j-key' : 'j-str'; }
+      else if (/true|false/.test(match)) { cls = 'j-bool'; }
+      else if (/null/.test(match)) { cls = 'j-null'; }
+      return `<span class="${cls}">${match}</span>`;
+    });
+}
+
+function buildOutput() {
+  return { weightOptions: data.weightOptions, products: data.products, iconColors: data.iconColors };
+}
+
+function exportJSON() {
+  const json = JSON.stringify(buildOutput(), null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'products.json'; a.click();
+  URL.revokeObjectURL(url);
+  unsaved = {};
+  renderSidebar();
+  toast('✓ products.json downloaded');
+}
+
+async function copyJSON() {
+  const json = JSON.stringify(buildOutput(), null, 2);
+  try {
+    await navigator.clipboard.writeText(json);
+    toast('⎘ JSON copied to clipboard');
+  } catch {
+    toast('Could not copy — use Download instead');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// File import
+// ─────────────────────────────────────────────────────────────────────────────
+function handleFileInput(e) {
+  const file = e.target.files[0];
+  if (file) readJSONFile(file);
+  e.target.value = '';
+}
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.add('drag-over');
+}
+function handleDragLeave() {
+  document.getElementById('dropZone').classList.remove('drag-over');
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.name.endsWith('.json')) readJSONFile(file);
+  else toast('Please drop a .json file');
+}
+
+function readJSONFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed.products || !Array.isArray(parsed.products)) throw new Error('Missing products array');
+      data = parsed;
+      unsaved = {};
+      searchQuery = '';
+      document.getElementById('sidebarSearch').value = '';
+      renderSidebar();
+      updateStats();
+      selectProduct(data.products[0].id);
+      toast(`📥 Loaded ${data.products.length} products from ${file.name}`);
+    } catch(err) {
+      toast('⚠ Error: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+function formatPrice(n) {
+  if (!n) return '0';
+  return n.toLocaleString('en-LK');
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function getBadgeStyle(badge, badgeColor) {
+  const map = {
+    'bg-green-700': 'background:#15803d;color:#fff',
+    'bg-green-600': 'background:#16a34a;color:#fff',
+    'bg-amber-500': 'background:#f59e0b;color:#000',
+    'bg-red-600':   'background:#dc2626;color:#fff',
+    'bg-purple-600':'background:#9333ea;color:#fff',
+    'bg-blue-600':  'background:#2563eb;color:#fff',
+  };
+  return map[badgeColor] || 'background:#333;color:#fff';
+}
+
+let toastTimer = null;
+function toast(msg) {
+  const t   = document.getElementById('toast');
+  const msg2 = document.getElementById('toastMsg');
+  if (toastTimer) clearTimeout(toastTimer);
+  msg2.textContent = msg;
+  t.classList.add('show');
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Start
+// ─────────────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
