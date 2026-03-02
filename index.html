@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="GT Nutri Bites Price Manager — Edit product prices, badges, and metadata for your storefront." />
+<meta name="theme-color" content="#080c10" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥜</text></svg>" />
 <title>GT Nutri Bites — Price Manager</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -511,7 +514,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  cursor: default;
+  gap: 10px;
 }
 
 .section-title {
@@ -1030,7 +1033,7 @@ code {
 .stat-card.c-green .stat-value { color: var(--accent); }
 .stat-card.c-amber .stat-value { color: var(--amber); }
 .stat-card.c-blue  .stat-value { color: var(--blue); }
-.stat-card.c-purple.stat-value { color: var(--purple); }
+.stat-card.c-purple .stat-value { color: var(--purple); }
 
 /* ── Import/export cards ── */
 .action-card {
@@ -1194,63 +1197,197 @@ code {
   margin-bottom: 14px;
 }
 
+/* ── Skip to content (a11y) ── */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  background: var(--accent);
+  color: #061a0e;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-family: 'Figtree', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 1000;
+  transition: top 0.2s;
+}
+.skip-link:focus {
+  top: 8px;
+}
+
+/* ── Focus visible ── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ── Mobile sidebar toggle ── */
+.mobile-toggle {
+  display: none;
+  width: 32px; height: 32px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 18px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+.mobile-toggle:hover { background: var(--surface2); border-color: var(--accent); }
+
+/* ── Sidebar overlay for mobile ── */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 149;
+}
+.sidebar-overlay.active { display: block; }
+
+/* ── Collapsible sections ── */
+.section-head { cursor: pointer; user-select: none; }
+.section-head .section-chevron {
+  display: inline-flex;
+  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.section.collapsed .section-head .section-chevron { transform: rotate(-90deg); }
+.section-body {
+  transition: max-height 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease, padding 0.3s ease;
+  overflow: hidden;
+}
+.section.collapsed .section-body {
+  max-height: 0 !important;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* ── Toast variants ── */
+#toast.toast-error { border-color: rgba(255,92,92,0.4); }
+#toast.toast-error .toast-icon { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+#toast.toast-warning { border-color: rgba(245,166,35,0.4); }
+#toast.toast-warning .toast-icon { background: var(--amber-dim); border-color: var(--amber); color: var(--amber); }
+
+/* ── Negative price input ── */
+.price-input-wrap input.invalid {
+  border-color: var(--red) !important;
+  box-shadow: 0 0 0 3px var(--red-dim) !important;
+}
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
+  .mobile-toggle { display: inline-flex; }
   .layout { grid-template-columns: 1fr; }
-  aside { height: auto; max-height: 200px; }
+  aside {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    max-height: none;
+    z-index: 150;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: none;
+  }
+  aside.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+  }
   .price-grid { grid-template-columns: repeat(3, 1fr); }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .nutrition-grid { grid-template-columns: repeat(3, 1fr); }
+  .header-center { display: none; }
+  .editor-inner { padding: 20px 16px 60px; }
+  .product-header { flex-direction: column; }
+  .header-actions-right { align-items: flex-start; flex-direction: row; flex-wrap: wrap; }
+}
+
+@media (max-width: 600px) {
+  .price-grid { grid-template-columns: repeat(2, 1fr); }
+  .nutrition-grid { grid-template-columns: repeat(2, 1fr); }
+  .form-row { grid-template-columns: 1fr; }
+  .form-row.triple, .form-row.quad { grid-template-columns: 1fr 1fr; }
+  .price-summary { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .editor-footer { flex-direction: column; gap: 12px; }
+  .footer-left, .footer-right { width: 100%; justify-content: stretch; }
+  .footer-left button, .footer-right button { flex: 1; justify-content: center; }
+  .welcome-title { font-size: 24px; }
+  .product-emoji-large { width: 44px; height: 44px; font-size: 22px; }
+  .product-title { font-size: 18px; }
 }
 </style>
 </head>
 <body>
 
+<!-- Skip to content link (a11y) -->
+<a href="#mainPanel" class="skip-link">Skip to main content</a>
+
 <!-- ── Header ── -->
-<header>
-  <div class="logo">
-    <div class="logo-mark">🥜</div>
-    GT Nutri Bites
-    <span class="logo-sep">/</span>
-    <span class="logo-module">price-manager</span>
+<header role="banner">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="mobile-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar menu">☰</button>
+    <div class="logo">
+      <div class="logo-mark" aria-hidden="true">🥜</div>
+      GT Nutri Bites
+      <span class="logo-sep">/</span>
+      <span class="logo-module">price-manager</span>
+    </div>
   </div>
   <div class="header-center">
     <div class="header-pill">
-      <div class="header-pill-dot"></div>
+      <div class="header-pill-dot" aria-hidden="true"></div>
       <span id="productCountTag">0 products</span>
     </div>
   </div>
   <div class="header-right">
-    <button class="btn btn-ghost btn-sm" onclick="loadDefaultData()">↺ Reset</button>
-    <button class="btn btn-secondary btn-sm" onclick="showJSONPreview()">{ } JSON</button>
-    <button class="btn btn-primary btn-sm" onclick="exportJSON()">↓ Export</button>
+    <button class="btn btn-ghost btn-sm" onclick="loadDefaultData()" title="Reset all data to defaults">↺ Reset</button>
+    <button class="btn btn-secondary btn-sm" onclick="showJSONPreview()" title="Preview JSON output">{ } JSON</button>
+    <button class="btn btn-primary btn-sm" onclick="exportJSON()" title="Download products.json (Ctrl+S)">↓ Export</button>
   </div>
 </header>
 
 <div class="layout">
 
+  <!-- Sidebar overlay for mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
   <!-- ── Sidebar ── -->
-  <aside>
+  <aside id="sidebar" role="navigation" aria-label="Product navigation">
     <div class="sidebar-header">
       <div class="sidebar-search">
-        <span class="sidebar-search-icon">⌕</span>
-        <input type="text" id="sidebarSearch" placeholder="Search products…" oninput="filterProducts(this.value)" />
+        <span class="sidebar-search-icon" aria-hidden="true">⌕</span>
+        <input type="text" id="sidebarSearch" placeholder="Search products… (Ctrl+K)" oninput="filterProducts(this.value)" aria-label="Search products" />
       </div>
-      <button class="btn btn-icon" onclick="addProduct()" title="Add product">+</button>
+      <button class="btn btn-icon" onclick="addProduct()" title="Add product" aria-label="Add new product">+</button>
     </div>
 
-    <div id="productList" class="product-list"></div>
+    <div id="productList" class="product-list" role="listbox" aria-label="Products"></div>
 
     <div class="sidebar-footer">
       <button class="sidebar-add-btn" onclick="addProduct()">
-        <span style="font-size:16px;line-height:1;">+</span>
+        <span style="font-size:16px;line-height:1;" aria-hidden="true">+</span>
         Add New Product
       </button>
     </div>
   </aside>
 
   <!-- ── Main ── -->
-  <main id="mainPanel">
+  <main id="mainPanel" role="main" aria-label="Product editor">
     <div class="editor-inner" id="editorInner">
 
       <!-- Welcome view -->
@@ -1326,8 +1463,8 @@ code {
 </div>
 
 <!-- Toast -->
-<div id="toast">
-  <div class="toast-icon">✓</div>
+<div id="toast" role="alert" aria-live="polite">
+  <div class="toast-icon" aria-hidden="true">✓</div>
   <span id="toastMsg"></span>
 </div>
 
@@ -1380,6 +1517,16 @@ function init() {
   updateStats();
   selectProduct(data.products[0].id);
   setupKeyboard();
+  setupBeforeUnload();
+}
+
+function setupBeforeUnload() {
+  window.addEventListener('beforeunload', e => {
+    if (Object.keys(unsaved).length > 0) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  });
 }
 
 function loadDefaultData() {
@@ -1412,6 +1559,35 @@ function setupKeyboard() {
       if (e.key === 'ArrowUp' && idx > 0) selectProduct(filtered[idx-1].id);
     }
   });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mobile sidebar
+// ─────────────────────────────────────────────────────────────────────────────
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const isOpen = sidebar.classList.contains('open');
+  if (isOpen) { closeSidebar(); } else { sidebar.classList.add('open'); overlay.classList.add('active'); }
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Collapsible sections
+// ─────────────────────────────────────────────────────────────────────────────
+function toggleSection(sectionEl) {
+  sectionEl.classList.toggle('collapsed');
+  const body = sectionEl.querySelector('.section-body');
+  if (body && !sectionEl.classList.contains('collapsed')) {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    setTimeout(() => { body.style.maxHeight = 'none'; }, 300);
+  } else if (body) {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    requestAnimationFrame(() => { body.style.maxHeight = '0'; });
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1456,12 +1632,12 @@ function renderSidebar() {
 
   for (const [type, products] of Object.entries(groups)) {
     if (products.length === 0) continue;
-    html += `<div class="sidebar-section-label">${typeLabels[type]}</div>`;
+    html += `<div class="sidebar-section-label">${typeLabels[type]} <span style="opacity:0.5;">(${products.length})</span></div>`;
     products.forEach(p => {
       const hasSale = p.oldPrice !== null;
       const isUnsaved = unsaved[p.id];
       html += `
-      <div class="product-item${currentId === p.id ? ' active' : ''}" onclick="selectProduct(${p.id})" id="sidebar-${p.id}">
+      <div class="product-item${currentId === p.id ? ' active' : ''}" onclick="selectProduct(${p.id})" id="sidebar-${p.id}" role="option" aria-selected="${currentId === p.id}" tabindex="0" onkeydown="if(event.key==='Enter')selectProduct(${p.id})">
         <div class="product-emoji-wrap">${p.emoji}</div>
         <div class="product-item-info">
           <div class="product-item-name">${escHtml(p.name)}</div>
@@ -1498,15 +1674,22 @@ function selectProduct(id) {
   const p = data.products.find(x => x.id === id);
   if (!p) return;
 
+  // Close mobile sidebar
+  closeSidebar();
+
   document.querySelectorAll('.product-item').forEach(el => el.classList.remove('active'));
   const sideEl = document.getElementById(`sidebar-${id}`);
   if (sideEl) {
     sideEl.classList.add('active');
+    sideEl.setAttribute('aria-selected', 'true');
     sideEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
   document.getElementById('welcomeView').style.display = 'none';
   document.getElementById('productEditor').style.display = 'block';
+
+  // Scroll main panel to top
+  document.getElementById('mainPanel').scrollTo({ top: 0, behavior: 'smooth' });
 
   renderEditor(p);
 }
@@ -1537,6 +1720,7 @@ function renderEditor(p) {
         <span class="price-prefix">Rs.</span>
         <input type="number" min="0" step="1"
           value="${v.price || ''}" placeholder="0"
+          aria-label="Current price for ${w}"
           oninput="updateWeightPrice(${p.id},'${w}','price',this.value)" />
       </div>
       <div class="price-field-label">Strikethrough Price</div>
@@ -1544,6 +1728,7 @@ function renderEditor(p) {
         <span class="price-prefix">Rs.</span>
         <input type="number" min="0" step="1"
           value="${v.oldPrice !== null ? v.oldPrice : ''}" placeholder="none"
+          aria-label="Strikethrough price for ${w}"
           oninput="updateWeightPrice(${p.id},'${w}','oldPrice',this.value)" />
       </div>
       ${disc ? `<div class="discount-badge">−${disc}% off</div>` : ''}
@@ -1554,8 +1739,9 @@ function renderEditor(p) {
   const badgeOptsHTML = BADGE_OPTIONS.map(b => {
     const isSelected = (b.label === 'None' && !p.badge) || (p.badge === b.label);
     return `<span class="badge-opt ${b.label === 'None' ? 'badge-none' : ''} ${isSelected ? 'selected' : ''}"
-      style="${b.style}"
-      onclick="updateBadge(${p.id},'${b.label}','${b.color || ''}')">${b.label}</span>`;
+      style="${b.style}" tabindex="0" role="radio" aria-checked="${isSelected}"
+      onclick="updateBadge(${p.id},'${b.label}','${b.color || ''}')"
+      onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();updateBadge(${p.id},'${b.label}','${b.color || ''}')}">${b.label}</span>`;
   }).join('');
 
   // Weight buttons
@@ -1639,12 +1825,13 @@ function renderEditor(p) {
 
     <!-- Weight prices -->
     <div class="section">
-      <div class="section-head">
+      <div class="section-head" onclick="toggleSection(this.parentElement)">
         <div class="section-title">
           <div class="section-icon" style="background:rgba(34,212,114,0.1);">💰</div>
           Weight Variant Prices
         </div>
         <span class="section-meta">All prices in LKR · leave strikethrough empty for no sale</span>
+        <span class="section-chevron" aria-hidden="true">▾</span>
       </div>
       <div class="section-body">
         <div class="price-grid">${weightCardsHTML}</div>
@@ -1653,11 +1840,12 @@ function renderEditor(p) {
 
     <!-- Default weight -->
     <div class="section">
-      <div class="section-head">
+      <div class="section-head" onclick="toggleSection(this.parentElement)">
         <div class="section-title">
           <div class="section-icon" style="background:rgba(77,166,255,0.1);">⚖️</div>
           Default Display Weight
         </div>
+        <span class="section-chevron" aria-hidden="true">▾</span>
       </div>
       <div class="section-body">
         <div style="margin-bottom:12px;font-size:13px;color:var(--text2);">The weight option shown by default on the product card. This sets the displayed price.</div>
@@ -1667,11 +1855,12 @@ function renderEditor(p) {
 
     <!-- Badge -->
     <div class="section">
-      <div class="section-head">
+      <div class="section-head" onclick="toggleSection(this.parentElement)">
         <div class="section-title">
           <div class="section-icon" style="background:rgba(199,125,255,0.1);">🏷️</div>
           Product Badge
         </div>
+        <span class="section-chevron" aria-hidden="true">▾</span>
       </div>
       <div class="section-body">
         <div style="margin-bottom:12px;font-size:13px;color:var(--text2);">Badge displayed on the product image in the storefront. Select None to hide.</div>
@@ -1681,11 +1870,12 @@ function renderEditor(p) {
 
     <!-- Product Info -->
     <div class="section">
-      <div class="section-head">
+      <div class="section-head" onclick="toggleSection(this.parentElement)">
         <div class="section-title">
           <div class="section-icon" style="background:rgba(245,166,35,0.1);">📝</div>
           Product Information
         </div>
+        <span class="section-chevron" aria-hidden="true">▾</span>
       </div>
       <div class="section-body">
         <div class="form-row">
@@ -1734,12 +1924,13 @@ function renderEditor(p) {
 
     <!-- Benefits -->
     <div class="section">
-      <div class="section-head">
+      <div class="section-head" onclick="toggleSection(this.parentElement)">
         <div class="section-title">
           <div class="section-icon" style="background:rgba(34,212,114,0.1);">✅</div>
           Key Benefits
         </div>
         <span class="section-meta">${(p.benefits || []).length} items</span>
+        <span class="section-chevron" aria-hidden="true">▾</span>
       </div>
       <div class="section-body">
         <div class="benefits-list" id="benefits-${p.id}">${benefitsHTML}</div>
@@ -1751,12 +1942,13 @@ function renderEditor(p) {
 
     <!-- Nutrition -->
     <div class="section">
-      <div class="section-head">
+      <div class="section-head" onclick="toggleSection(this.parentElement)">
         <div class="section-title">
           <div class="section-icon" style="background:rgba(77,166,255,0.1);">🔬</div>
           Nutrition Info
         </div>
         <span class="section-meta">per serving</span>
+        <span class="section-chevron" aria-hidden="true">▾</span>
       </div>
       <div class="section-body">
         <div class="nutrition-grid">${nutriHTML}</div>
@@ -1804,6 +1996,15 @@ function updateWeightPrice(id, weight, field, value) {
   if (!p) return;
   if (!p.weightVariants[weight]) p.weightVariants[weight] = { price: null, oldPrice: null };
   const val = value === '' ? null : parseInt(value, 10);
+
+  // Validate: prevent negative values
+  if (val !== null && val < 0) {
+    event.target.classList.add('invalid');
+    toast('⚠ Price cannot be negative', 'warning');
+    return;
+  }
+  if (event && event.target) event.target.classList.remove('invalid');
+
   p.weightVariants[weight][field] = (isNaN(val) || val === null) ? null : val;
 
   if (weight === p.weight) {
@@ -1968,7 +2169,7 @@ function deleteProduct(id) {
 function duplicateProduct(id) {
   const p = getProduct(id);
   if (!p) return;
-  const newId = Math.max(...data.products.map(p => p.id)) + 1;
+  const newId = data.products.length > 0 ? Math.max(...data.products.map(p => p.id)) + 1 : 1;
   const clone = JSON.parse(JSON.stringify(p));
   clone.id = newId;
   clone.name = clone.name + ' (Copy)';
@@ -1981,7 +2182,7 @@ function duplicateProduct(id) {
 }
 
 function addProduct() {
-  const newId = Math.max(...data.products.map(p => p.id)) + 1;
+  const newId = data.products.length > 0 ? Math.max(...data.products.map(p => p.id)) + 1 : 1;
   const newProduct = {
     id: newId, name: "New Product", category: "Category", type: "nuts",
     price: 0, oldPrice: null, weight: "500g",
@@ -2070,7 +2271,7 @@ async function copyJSON() {
     await navigator.clipboard.writeText(json);
     toast('⎘ JSON copied to clipboard');
   } catch {
-    toast('Could not copy — use Download instead');
+    toast('Could not copy — use Download instead', 'warning');
   }
 }
 
@@ -2094,7 +2295,7 @@ function handleDrop(e) {
   document.getElementById('dropZone').classList.remove('drag-over');
   const file = e.dataTransfer.files[0];
   if (file && file.name.endsWith('.json')) readJSONFile(file);
-  else toast('Please drop a .json file');
+  else toast('Please drop a .json file', 'warning');
 }
 
 function readJSONFile(file) {
@@ -2112,7 +2313,7 @@ function readJSONFile(file) {
       selectProduct(data.products[0].id);
       toast(`📥 Loaded ${data.products.length} products from ${file.name}`);
     } catch(err) {
-      toast('⚠ Error: ' + err.message);
+      toast('⚠ Error: ' + err.message, 'error');
     }
   };
   reader.readAsText(file);
@@ -2144,11 +2345,16 @@ function getBadgeStyle(badge, badgeColor) {
 }
 
 let toastTimer = null;
-function toast(msg) {
+function toast(msg, type) {
   const t   = document.getElementById('toast');
   const msg2 = document.getElementById('toastMsg');
+  const icon = t.querySelector('.toast-icon');
   if (toastTimer) clearTimeout(toastTimer);
   msg2.textContent = msg;
+  t.classList.remove('toast-error', 'toast-warning');
+  if (type === 'error') { t.classList.add('toast-error'); icon.textContent = '✕'; }
+  else if (type === 'warning') { t.classList.add('toast-warning'); icon.textContent = '⚠'; }
+  else { icon.textContent = '✓'; }
   t.classList.add('show');
   toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
 }
