@@ -2092,7 +2092,7 @@ function renderEditor(p) {
     const isDefault = p.weight === w;
     const disc = v.oldPrice ? Math.round((1 - v.price / v.oldPrice) * 100) : null;
     return `
-    <div class="price-card${isDefault ? ' is-default' : ''}">
+    <div class="price-card${isDefault ? ' is-default' : ''}" data-weight="${w}">
       <div class="price-card-weight">
         <span>${w}</span>
         ${isDefault ? `<span class="default-chip">DEFAULT</span>` : ''}
@@ -2100,7 +2100,7 @@ function renderEditor(p) {
       <div class="price-field-label">Current Price</div>
       <div class="price-input-wrap">
         <span class="price-prefix">Rs.</span>
-        <input type="number" min="0" step="1"
+        <input type="number" min="0" step="1" data-field="price"
           value="${v.price || ''}" placeholder="0"
           aria-label="Current price for ${w}"
           oninput="updateWeightPrice(${p.id},'${w}','price',this.value,this)" />
@@ -2108,7 +2108,7 @@ function renderEditor(p) {
       <div class="price-field-label">Strikethrough Price</div>
       <div class="price-input-wrap old-price">
         <span class="price-prefix">Rs.</span>
-        <input type="number" min="0" step="1"
+        <input type="number" min="0" step="1" data-field="oldPrice"
           value="${v.oldPrice !== null ? v.oldPrice : ''}" placeholder="none"
           aria-label="Strikethrough price for ${w}"
           oninput="updateWeightPrice(${p.id},'${w}','oldPrice',this.value,this)" />
@@ -2390,19 +2390,18 @@ function updateWeightPrice(id, weight, field, value, inputEl) {
   p.weightVariants[weight][field] = (isNaN(val) || val === null) ? null : val;
 
   // Auto-calculate other weight prices when 1kg is edited
-  // Multipliers represent price scaling per weight (e.g., 100g is ~11% of 1kg price)
+  // Auto-calculate other weights from 1kg price using per-gram premium multipliers.
+  // Smaller packs carry a per-gram premium: 100g≈11%, 250g≈26.4%, 500g≈51.8%, 750g≈76.4% of 1kg.
   if (weight === '1kg' && val !== null && !isNaN(val) && val > 0) {
     const multipliers = { '100g': 0.11, '250g': 0.264, '500g': 0.518, '750g': 0.764 };
     for (const [w, mult] of Object.entries(multipliers)) {
       const calcVal = Math.round(val * mult);
       if (!p.weightVariants[w]) p.weightVariants[w] = { price: null, oldPrice: null };
       p.weightVariants[w][field] = calcVal;
-      const cards = document.querySelectorAll('.price-card');
-      const wIdx = WEIGHTS.indexOf(w);
-      if (cards[wIdx]) {
-        const inputs = cards[wIdx].querySelectorAll('input[type="number"]');
-        const inputIdx = field === 'price' ? 0 : 1;
-        if (inputs[inputIdx]) inputs[inputIdx].value = calcVal;
+      const card = document.querySelector(`.price-card[data-weight="${w}"]`);
+      if (card) {
+        const input = card.querySelector(`input[data-field="${field}"]`);
+        if (input) input.value = calcVal;
       }
     }
   }
@@ -3104,7 +3103,7 @@ function renderFinalPricesPage() {
         <td class="fp-product-name">${p.emoji} ${escHtml(p.name)}</td>
         <td class="fp-product-type">${p.type}</td>
         <td>
-          <select onchange="updateProductPackagingType(${p.id},this.value)">
+          <select aria-label="Packaging type for ${escHtml(p.name)}" onchange="updateProductPackagingType(${p.id},this.value)">
             <option value="zipLockBag"${pkgType === 'zipLockBag' ? ' selected' : ''}>🛍️ Zip Lock</option>
             <option value="plasticBottle"${pkgType === 'plasticBottle' ? ' selected' : ''}>🧴 Plastic</option>
             <option value="glassBottle"${pkgType === 'glassBottle' ? ' selected' : ''}>🫙 Glass</option>
