@@ -1719,6 +1719,7 @@ const BADGE_OPTIONS = [
 ];
 
 const WEIGHTS = ["100g","250g","500g","750g","1kg"];
+const STORAGE_KEY = 'gt-nutri-bites-price-manager';
 
 let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
 let currentId = null;
@@ -2716,8 +2717,6 @@ function updateFinalPriceDisplay(id) {
 // ─────────────────────────────────────────────────────────────────────────────
 // Save / Load localStorage
 // ─────────────────────────────────────────────────────────────────────────────
-const STORAGE_KEY = 'gt-nutri-bites-price-manager';
-
 function saveToLocalStorage() {
   try {
     const output = buildOutput();
