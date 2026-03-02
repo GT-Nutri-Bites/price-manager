@@ -2740,7 +2740,7 @@ function loadFromLocalStorage() {
       if (parsed.products && Array.isArray(parsed.products)) {
         data = parsed;
         if (!data.packagingCosts) {
-          data.packagingCosts = DEFAULT_DATA.packagingCosts;
+          data.packagingCosts = JSON.parse(JSON.stringify(DEFAULT_DATA.packagingCosts));
         }
         if (data.deliveryCharges === undefined) {
           data.deliveryCharges = DEFAULT_DATA.deliveryCharges;
