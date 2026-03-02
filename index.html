@@ -1317,6 +1317,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .editor-inner { padding: 20px 16px 60px; }
   .product-header { flex-direction: column; }
   .header-actions-right { align-items: flex-start; flex-direction: row; flex-wrap: wrap; }
+  header { flex-wrap: wrap; height: auto; min-height: 56px; gap: 8px; padding: 8px 16px; }
+  .header-right { flex-wrap: wrap; gap: 4px; }
+  .header-right .btn { padding: 5px 10px; font-size: 12px; }
 }
 
 @media (max-width: 600px) {
@@ -1331,6 +1334,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .welcome-title { font-size: 26px; }
   .product-emoji-large { width: 44px; height: 44px; font-size: 22px; }
   .product-title { font-size: 20px; }
+  .header-right .btn { padding: 4px 8px; font-size: 11px; }
+  .logo-module, .logo-sep { display: none; }
+  .delivery-field { flex-direction: column; align-items: flex-start; }
+  .delivery-field label { white-space: normal; }
+  .packaging-table td input { width: 60px; font-size: 11px; }
 }
 /* ── Packaging costs table ── */
 .packaging-table {
@@ -1767,6 +1775,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
             <div class="action-card-title">Packaging Costs</div>
           </div>
           <div class="action-card-desc">Set packaging costs per weight for each packaging type.</div>
+          <div style="overflow-x:auto;">
           <table class="packaging-table" id="packagingTable">
             <thead>
               <tr>
@@ -1779,17 +1788,25 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
             </thead>
             <tbody id="packagingTableBody"></tbody>
           </table>
+          </div>
         </div>
         <div class="action-card">
           <div class="action-card-header">
             <div class="action-card-icon" style="background:rgba(77,166,255,0.1);">🚚</div>
             <div class="action-card-title">Delivery Charges</div>
           </div>
-          <div class="action-card-desc">Flat delivery charge applied to all final product prices.</div>
+          <div class="action-card-desc">Delivery charges by area applied to final product prices.</div>
           <div class="delivery-field" style="margin-top:0;">
-            <label>Delivery Charges (Rs.)</label>
-            <input type="number" id="deliveryChargeInput" min="0" step="1" value="350" placeholder="0" oninput="updateDeliveryCharges(this.value)" />
-            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);">Applied to all final prices</span>
+            <label>Colombo (Rs.)</label>
+            <input type="number" id="deliveryCharge-colombo" min="0" step="1" value="350" placeholder="0" oninput="updateDeliveryCharges('colombo',this.value)" />
+          </div>
+          <div class="delivery-field" style="margin-top:8px;">
+            <label>Gampaha / Galle / Kurunegala (Rs.)</label>
+            <input type="number" id="deliveryCharge-suburban" min="0" step="1" value="400" placeholder="0" oninput="updateDeliveryCharges('suburban',this.value)" />
+          </div>
+          <div class="delivery-field" style="margin-top:8px;">
+            <label>Any Other Area (Rs.)</label>
+            <input type="number" id="deliveryCharge-other" min="0" step="1" value="450" placeholder="0" oninput="updateDeliveryCharges('other',this.value)" />
           </div>
         </div>
       </div>
@@ -1815,29 +1832,31 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 // Data
 // ─────────────────────────────────────────────────────────────────────────────
 const DEFAULT_DATA = {
-  "weightOptions":["100g","250g","500g","750g","1kg"],
+  "weightOptions":["100g","250g","500g","1kg","2kg"],
   "products":[
-    {"id":1,"name":"Premium California Almonds","category":"Organic Almonds","type":"nuts","price":6267,"oldPrice":8247,"weight":"500g","weightVariants":{"100g":{"price":1320,"oldPrice":1738},"250g":{"price":3190,"oldPrice":4202},"500g":{"price":6267,"oldPrice":8247},"750g":{"price":9240,"oldPrice":12166},"1kg":{"price":12100,"oldPrice":15928}},"badge":"BEST SELLER","badgeColor":"bg-green-700","description":"Raw, unsalted, and packed with nutrients","fullDescription":"Our Premium California Almonds are sourced directly from sustainable farms in California. These raw, unsalted almonds are carefully selected for their superior quality and freshness.","benefits":["High in Vitamin E","Rich in healthy fats","Good source of protein","Contains magnesium and fiber"],"nutrition":{"calories":"170 per 28g","protein":"6g","fat":"15g","carbs":"6g","fiber":"3.5g"},"emoji":"🥜","useEmoji":true},
-    {"id":2,"name":"Chia Seeds Super Pack","category":"Organic Seeds","type":"seeds","price":4947,"oldPrice":null,"weight":"400g","weightVariants":{"100g":{"price":1320,"oldPrice":null},"250g":{"price":3135,"oldPrice":null},"500g":{"price":6160,"oldPrice":null},"750g":{"price":9075,"oldPrice":null},"1kg":{"price":11880,"oldPrice":null}},"badge":"NEW","badgeColor":"bg-amber-500","description":"Omega-3 rich superfood","fullDescription":"Experience the power of ancient nutrition with our Chia Seeds Super Pack.","benefits":["Extremely high in Omega-3","Loaded with antioxidants","High in quality protein","May reduce heart disease risk"],"nutrition":{"calories":"138 per 28g","protein":"4.7g","fat":"8.7g","carbs":"12g","fiber":"9.8g"},"emoji":"🫘","useEmoji":true},
-    {"id":3,"name":"Roasted Cashews","category":"Premium Nuts","type":"nuts","price":7587,"oldPrice":null,"weight":"600g","weightVariants":{"100g":{"price":1408,"oldPrice":null},"250g":{"price":3410,"oldPrice":null},"500g":{"price":6710,"oldPrice":null},"750g":{"price":9900,"oldPrice":null},"1kg":{"price":12980,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Lightly salted perfection","fullDescription":"Indulge in our perfectly roasted cashews, lightly salted to enhance their natural buttery flavor.","benefits":["Heart-healthy fats","Rich in copper and magnesium","Supports bone health","May help with weight management"],"nutrition":{"calories":"157 per 28g","protein":"5g","fat":"12g","carbs":"9g","fiber":"1g"},"emoji":"🥜","useEmoji":true},
-    {"id":4,"name":"Energy Boost Mix","category":"Trail Mix","type":"mix","price":5607,"oldPrice":7257,"weight":"450g","weightVariants":{"100g":{"price":1320,"oldPrice":1705},"250g":{"price":3190,"oldPrice":4125},"500g":{"price":6270,"oldPrice":8085},"750g":{"price":9240,"oldPrice":11935},"1kg":{"price":12100,"oldPrice":15620}},"badge":"SALE","badgeColor":"bg-red-600","description":"Perfect blend of nuts & dried fruits","fullDescription":"Our signature Energy Boost Mix combines premium almonds, cashews, dried cranberries, and raisins.","benefits":["Quick energy source","Balanced nutrients","Great for active lifestyles","Natural ingredients only"],"nutrition":{"calories":"150 per 30g","protein":"4g","fat":"8g","carbs":"16g","fiber":"2g"},"emoji":"🍇","useEmoji":true},
-    {"id":5,"name":"Sunflower Seeds","category":"Premium Seeds","type":"seeds","price":4287,"oldPrice":null,"weight":"350g","weightVariants":{"100g":{"price":1254,"oldPrice":null},"250g":{"price":3025,"oldPrice":null},"500g":{"price":5940,"oldPrice":null},"750g":{"price":8745,"oldPrice":null},"1kg":{"price":11440,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Roasted & lightly salted","fullDescription":"Our premium sunflower seeds are lightly roasted and salted to perfection.","benefits":["High in Vitamin E","Rich in selenium","Anti-inflammatory properties","Supports immune health"],"nutrition":{"calories":"165 per 28g","protein":"5.5g","fat":"14g","carbs":"7g","fiber":"3g"},"emoji":"🌻","useEmoji":true},
-    {"id":6,"name":"Raw Walnuts","category":"Organic Nuts","type":"nuts","price":6597,"oldPrice":null,"weight":"500g","weightVariants":{"100g":{"price":1386,"oldPrice":null},"250g":{"price":3355,"oldPrice":null},"500g":{"price":6597,"oldPrice":null},"750g":{"price":9735,"oldPrice":null},"1kg":{"price":12760,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Heart-healthy omega-3","fullDescription":"Our raw organic walnuts are nature's brain food.","benefits":["Rich in Omega-3 ALA","Supports brain health","Anti-inflammatory","Good for heart health"],"nutrition":{"calories":"185 per 28g","protein":"4.3g","fat":"18.5g","carbs":"4g","fiber":"1.9g"},"emoji":"🧠","useEmoji":true},
-    {"id":7,"name":"Pumpkin Seeds","category":"Superfood Seeds","type":"seeds","price":4617,"oldPrice":null,"weight":"400g","weightVariants":{"100g":{"price":1232,"oldPrice":null},"250g":{"price":2970,"oldPrice":null},"500g":{"price":5830,"oldPrice":null},"750g":{"price":8580,"oldPrice":null},"1kg":{"price":11220,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"High in zinc & magnesium","fullDescription":"Our premium pumpkin seeds are a nutritional powerhouse.","benefits":["High in zinc and magnesium","Supports prostate health","Rich in antioxidants","May improve sleep quality"],"nutrition":{"calories":"151 per 28g","protein":"7g","fat":"13g","carbs":"5g","fiber":"1.7g"},"emoji":"🎃","useEmoji":true},
-    {"id":8,"name":"Deluxe Nut Mix","category":"Premium Mix","type":"mix","price":8247,"oldPrice":null,"weight":"600g","weightVariants":{"100g":{"price":1452,"oldPrice":null},"250g":{"price":3520,"oldPrice":null},"500g":{"price":6930,"oldPrice":null},"750g":{"price":10230,"oldPrice":null},"1kg":{"price":13420,"oldPrice":null}},"badge":"ORGANIC","badgeColor":"bg-green-600","description":"Almonds, cashews & pistachios","fullDescription":"Our Deluxe Nut Mix features a premium blend of organic almonds, cashews, and pistachios.","benefits":["Variety of nutrients","Premium organic quality","Heart-healthy fats","Perfect for entertaining"],"nutrition":{"calories":"170 per 28g","protein":"5.5g","fat":"15g","carbs":"7g","fiber":"2.5g"},"emoji":"🥗","useEmoji":true},
-    {"id":9,"name":"Premium Pistachios","category":"Gourmet Nuts","type":"nuts","price":7257,"oldPrice":null,"weight":"450g","weightVariants":{"100g":{"price":1694,"oldPrice":null},"250g":{"price":4103,"oldPrice":null},"500g":{"price":8074,"oldPrice":null},"750g":{"price":11913,"oldPrice":null},"1kg":{"price":15620,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Roasted & lightly salted green gems","fullDescription":"Our Premium Pistachios are carefully selected from the finest orchards.","benefits":["Rich in antioxidants","Supports eye health","High in protein and fiber","May aid in weight management"],"nutrition":{"calories":"159 per 28g","protein":"6g","fat":"13g","carbs":"8g","fiber":"3g"},"emoji":"💚","useEmoji":true},
-    {"id":10,"name":"Organic Hazelnuts","category":"Premium Nuts","type":"nuts","price":6927,"oldPrice":null,"weight":"500g","weightVariants":{"100g":{"price":1452,"oldPrice":null},"250g":{"price":3520,"oldPrice":null},"500g":{"price":6927,"oldPrice":null},"750g":{"price":10230,"oldPrice":null},"1kg":{"price":13420,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Rich, buttery & heart-healthy","fullDescription":"Our Organic Hazelnuts offer a rich, buttery flavor and satisfying crunch.","benefits":["Extremely high in Vitamin E","Rich in antioxidants","Supports heart health","Good source of folate"],"nutrition":{"calories":"178 per 28g","protein":"4.2g","fat":"17g","carbs":"5g","fiber":"2.7g"},"emoji":"🌰","useEmoji":true},
-    {"id":11,"name":"Macadamia Nuts","category":"Luxury Nuts","type":"nuts","price":8907,"oldPrice":10887,"weight":"400g","weightVariants":{"100g":{"price":2310,"oldPrice":2827},"250g":{"price":5610,"oldPrice":6864},"500g":{"price":11055,"oldPrice":13530},"750g":{"price":16335,"oldPrice":19998},"1kg":{"price":21450,"oldPrice":26268}},"badge":"PREMIUM","badgeColor":"bg-purple-600","description":"Buttery smooth & luxurious","fullDescription":"Experience luxury with our premium Macadamia Nuts.","benefits":["Highest in monounsaturated fats","Supports heart health","Rich in thiamin","Contains manganese"],"nutrition":{"calories":"204 per 28g","protein":"2.2g","fat":"21g","carbs":"4g","fiber":"2.4g"},"emoji":"🤍","useEmoji":true},
-    {"id":12,"name":"Roasted Peanuts","category":"Classic Nuts","type":"nuts","price":3957,"oldPrice":null,"weight":"600g","weightVariants":{"100g":{"price":726,"oldPrice":null},"250g":{"price":1760,"oldPrice":null},"500g":{"price":3465,"oldPrice":null},"750g":{"price":5115,"oldPrice":null},"1kg":{"price":6710,"oldPrice":null}},"badge":"VALUE PACK","badgeColor":"bg-blue-600","description":"Classic favorite, protein-packed","fullDescription":"Our Roasted Peanuts are a timeless classic!","benefits":["High in protein","Rich in healthy fats","Good source of biotin","Contains resveratrol"],"nutrition":{"calories":"161 per 28g","protein":"7.3g","fat":"14g","carbs":"5g","fiber":"2.4g"},"emoji":"🥜","useEmoji":true},
-    {"id":13,"name":"Organic Flax Seeds","category":"Superfood Seeds","type":"seeds","price":4452,"oldPrice":null,"weight":"450g","weightVariants":{"100g":{"price":1056,"oldPrice":null},"250g":{"price":2530,"oldPrice":null},"500g":{"price":4950,"oldPrice":null},"750g":{"price":7260,"oldPrice":null},"1kg":{"price":9460,"oldPrice":null}},"badge":"NEW","badgeColor":"bg-amber-500","description":"Omega-3 powerhouse for wellness","fullDescription":"Our Organic Flax Seeds are a nutritional powerhouse.","benefits":["Richest plant source of Omega-3","High in dietary fiber","Contains lignans","Supports digestive health"],"nutrition":{"calories":"150 per 28g","protein":"5.1g","fat":"12g","carbs":"8g","fiber":"7.6g"},"emoji":"🌾","useEmoji":true}
+    {"id":1,"name":"Premium California Almonds","category":"Organic Almonds","type":"nuts","price":2000,"oldPrice":null,"weight":"500g","weightVariants":{"100g":{"price":400,"oldPrice":null},"250g":{"price":1000,"oldPrice":null},"500g":{"price":2000,"oldPrice":null},"1kg":{"price":4000,"oldPrice":null},"2kg":{"price":8000,"oldPrice":null}},"badge":"BEST SELLER","badgeColor":"bg-green-700","description":"Raw, unsalted, and packed with nutrients","fullDescription":"Our Premium California Almonds are sourced directly from sustainable farms in California. These raw, unsalted almonds are carefully selected for their superior quality and freshness.","benefits":["High in Vitamin E","Rich in healthy fats","Good source of protein","Contains magnesium and fiber"],"nutrition":{"calories":"170 per 28g","protein":"6g","fat":"15g","carbs":"6g","fiber":"3.5g"},"emoji":"🥜","useEmoji":true},
+    {"id":2,"name":"Premium Pistachios","category":"Gourmet Nuts","type":"nuts","price":2750,"oldPrice":null,"weight":"500g","weightVariants":{"100g":{"price":550,"oldPrice":null},"250g":{"price":1375,"oldPrice":null},"500g":{"price":2750,"oldPrice":null},"1kg":{"price":5500,"oldPrice":null},"2kg":{"price":11000,"oldPrice":null}},"badge":"PREMIUM","badgeColor":"bg-purple-600","description":"Roasted & lightly salted green gems","fullDescription":"Our Premium Pistachios are carefully selected from the finest orchards.","benefits":["Rich in antioxidants","Supports eye health","High in protein and fiber","May aid in weight management"],"nutrition":{"calories":"159 per 28g","protein":"6g","fat":"13g","carbs":"8g","fiber":"3g"},"emoji":"💚","useEmoji":true},
+    {"id":3,"name":"Roasted Cashews","category":"Premium Nuts","type":"nuts","price":2750,"oldPrice":null,"weight":"500g","weightVariants":{"100g":{"price":550,"oldPrice":null},"250g":{"price":1375,"oldPrice":null},"500g":{"price":2750,"oldPrice":null},"1kg":{"price":5500,"oldPrice":null},"2kg":{"price":11000,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Lightly salted perfection","fullDescription":"Indulge in our perfectly roasted cashews, lightly salted to enhance their natural buttery flavor.","benefits":["Heart-healthy fats","Rich in copper and magnesium","Supports bone health","May help with weight management"],"nutrition":{"calories":"157 per 28g","protein":"5g","fat":"12g","carbs":"9g","fiber":"1g"},"emoji":"🥜","useEmoji":true},
+    {"id":4,"name":"Pumpkin Seeds","category":"Superfood Seeds","type":"seeds","price":1625,"oldPrice":null,"weight":"500g","weightVariants":{"100g":{"price":325,"oldPrice":null},"250g":{"price":812.50,"oldPrice":null},"500g":{"price":1625,"oldPrice":null},"1kg":{"price":3250,"oldPrice":null},"2kg":{"price":6500,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"High in zinc & magnesium","fullDescription":"Our premium pumpkin seeds are a nutritional powerhouse.","benefits":["High in zinc and magnesium","Supports prostate health","Rich in antioxidants","May improve sleep quality"],"nutrition":{"calories":"151 per 28g","protein":"7g","fat":"13g","carbs":"5g","fiber":"1.7g"},"emoji":"🎃","useEmoji":true},
+    {"id":5,"name":"Sunflower Seeds","category":"Premium Seeds","type":"seeds","price":1625,"oldPrice":null,"weight":"500g","weightVariants":{"100g":{"price":325,"oldPrice":null},"250g":{"price":812.50,"oldPrice":null},"500g":{"price":1625,"oldPrice":null},"1kg":{"price":3250,"oldPrice":null},"2kg":{"price":6500,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Roasted & lightly salted","fullDescription":"Our premium sunflower seeds are lightly roasted and salted to perfection.","benefits":["High in Vitamin E","Rich in selenium","Anti-inflammatory properties","Supports immune health"],"nutrition":{"calories":"165 per 28g","protein":"5.5g","fat":"14g","carbs":"7g","fiber":"3g"},"emoji":"🌻","useEmoji":true},
+    {"id":6,"name":"Chia Seeds","category":"Organic Seeds","type":"seeds","price":1500,"oldPrice":null,"weight":"500g","weightVariants":{"100g":{"price":300,"oldPrice":null},"250g":{"price":750,"oldPrice":null},"500g":{"price":1500,"oldPrice":null},"1kg":{"price":3000,"oldPrice":null},"2kg":{"price":6000,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Omega-3 rich superfood","fullDescription":"Experience the power of ancient nutrition with our Chia Seeds.","benefits":["Extremely high in Omega-3","Loaded with antioxidants","High in quality protein","May reduce heart disease risk"],"nutrition":{"calories":"138 per 28g","protein":"4.7g","fat":"8.7g","carbs":"12g","fiber":"9.8g"},"emoji":"🫘","useEmoji":true},
+    {"id":7,"name":"Organic Flax Seeds","category":"Superfood Seeds","type":"seeds","price":1500,"oldPrice":null,"weight":"500g","weightVariants":{"100g":{"price":300,"oldPrice":null},"250g":{"price":750,"oldPrice":null},"500g":{"price":1500,"oldPrice":null},"1kg":{"price":3000,"oldPrice":null},"2kg":{"price":6000,"oldPrice":null}},"badge":"NEW","badgeColor":"bg-amber-500","description":"Omega-3 powerhouse for wellness","fullDescription":"Our Organic Flax Seeds are a nutritional powerhouse.","benefits":["Richest plant source of Omega-3","High in dietary fiber","Contains lignans","Supports digestive health"],"nutrition":{"calories":"150 per 28g","protein":"5.1g","fat":"12g","carbs":"8g","fiber":"7.6g"},"emoji":"🌾","useEmoji":true},
+    {"id":8,"name":"Raw Walnuts","category":"Organic Nuts","type":"nuts","price":1900,"oldPrice":null,"weight":"500g","weightVariants":{"100g":{"price":380,"oldPrice":null},"250g":{"price":950,"oldPrice":null},"500g":{"price":1900,"oldPrice":null},"1kg":{"price":3800,"oldPrice":null},"2kg":{"price":7600,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Heart-healthy omega-3","fullDescription":"Our raw organic walnuts are nature's brain food.","benefits":["Rich in Omega-3 ALA","Supports brain health","Anti-inflammatory","Good for heart health"],"nutrition":{"calories":"185 per 28g","protein":"4.3g","fat":"18.5g","carbs":"4g","fiber":"1.9g"},"emoji":"🧠","useEmoji":true},
+    {"id":9,"name":"Olives","category":"Premium Olives","type":"nuts","price":325,"oldPrice":null,"weight":"500g","weightVariants":{"100g":{"price":65,"oldPrice":null},"250g":{"price":162.50,"oldPrice":null},"500g":{"price":325,"oldPrice":null},"1kg":{"price":650,"oldPrice":null},"2kg":{"price":1300,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Premium quality olives","fullDescription":"Our premium olives are carefully selected for their superior quality and flavor.","benefits":["Rich in healthy fats","High in antioxidants","Good source of Vitamin E","Supports heart health"],"nutrition":{"calories":"115 per 100g","protein":"0.8g","fat":"11g","carbs":"6g","fiber":"3.2g"},"emoji":"🫒","useEmoji":true},
+    {"id":10,"name":"Black Olives","category":"Premium Olives","type":"nuts","price":450,"oldPrice":null,"weight":"500g","weightVariants":{"100g":{"price":90,"oldPrice":null},"250g":{"price":225,"oldPrice":null},"500g":{"price":450,"oldPrice":null},"1kg":{"price":900,"oldPrice":null},"2kg":{"price":1800,"oldPrice":null}},"badge":null,"badgeColor":null,"description":"Rich and flavorful black olives","fullDescription":"Our premium black olives offer a rich, bold flavor perfect for any dish.","benefits":["Rich in iron","High in healthy fats","Good source of antioxidants","Supports bone health"],"nutrition":{"calories":"105 per 100g","protein":"0.8g","fat":"10g","carbs":"4g","fiber":"2.5g"},"emoji":"🫒","useEmoji":true},
+    {"id":11,"name":"Mix Nuts, Seeds & Dried Fruits","category":"Trail Mix","type":"mix","price":2250,"oldPrice":null,"weight":"500g","weightVariants":{"100g":{"price":450,"oldPrice":null},"250g":{"price":1125,"oldPrice":null},"500g":{"price":2250,"oldPrice":null},"1kg":{"price":4500,"oldPrice":null},"2kg":{"price":9000,"oldPrice":null}},"badge":"BEST SELLER","badgeColor":"bg-green-700","description":"Perfect blend of nuts, seeds & dried fruits","fullDescription":"Our signature Mix combines premium nuts, seeds, and dried fruits for the perfect healthy snack.","benefits":["Quick energy source","Balanced nutrients","Great for active lifestyles","Natural ingredients only"],"nutrition":{"calories":"150 per 30g","protein":"4g","fat":"8g","carbs":"16g","fiber":"2g"},"emoji":"🥗","useEmoji":true}
   ],
   "iconColors":{"amber":"text-amber-600","green":"text-green-600","orange":"text-orange-600","purple":"text-purple-600","yellow":"text-yellow-700","red":"text-red-700","lime":"text-lime-700","pink":"text-pink-700"},
   "packagingCosts": {
-    "glassBottle": { "100g": 120, "250g": 180, "500g": 250, "1kg": 350 },
-    "plasticBottle": { "100g": 60, "250g": 90, "500g": 130, "1kg": 180 },
-    "zipLockBag": { "100g": 15, "250g": 25, "500g": 35, "1kg": 50 }
+    "glassBottle": { "100g": 120, "250g": 145, "500g": 175, "1kg": 210 },
+    "plasticBottle": { "100g": 0, "250g": 0, "500g": 0, "1kg": 0 },
+    "zipLockBag": { "100g": 10, "250g": 15, "500g": 20, "1kg": 25 }
   },
-  "deliveryCharges": 350
+  "deliveryCharges": {
+    "colombo": 350,
+    "suburban": 400,
+    "other": 450
+  }
 };
 
 const BADGE_OPTIONS = [
@@ -1850,7 +1869,7 @@ const BADGE_OPTIONS = [
   { label: "VALUE PACK",  color: "bg-blue-600",  style: "background:#2563eb;color:#fff" },
 ];
 
-const WEIGHTS = ["100g","250g","500g","750g","1kg"];
+const WEIGHTS = ["100g","250g","500g","1kg","2kg"];
 const STORAGE_KEY = 'gt-nutri-bites-price-manager';
 
 let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
@@ -1858,6 +1877,20 @@ let currentId = null;
 let unsaved = {};
 let searchQuery = '';
 let currentPage = 1;
+let selectedDeliveryArea = 'colombo';
+
+const DELIVERY_AREAS = [
+  { key: "colombo", label: "Colombo" },
+  { key: "suburban", label: "Gampaha / Galle / Kurunegala" },
+  { key: "other", label: "Any Other Area" }
+];
+
+function getDeliveryCharge() {
+  if (typeof data.deliveryCharges === 'object' && data.deliveryCharges !== null) {
+    return data.deliveryCharges[selectedDeliveryArea] || 0;
+  }
+  return data.deliveryCharges || 0;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Init
@@ -1868,7 +1901,10 @@ function init() {
     data.packagingCosts = JSON.parse(JSON.stringify(DEFAULT_DATA.packagingCosts));
   }
   if (data.deliveryCharges === undefined) {
-    data.deliveryCharges = DEFAULT_DATA.deliveryCharges;
+    data.deliveryCharges = JSON.parse(JSON.stringify(DEFAULT_DATA.deliveryCharges));
+  }
+  if (typeof data.deliveryCharges === 'number') {
+    data.deliveryCharges = { colombo: data.deliveryCharges, suburban: data.deliveryCharges, other: data.deliveryCharges };
   }
   renderSidebar();
   updateStats();
@@ -2649,7 +2685,7 @@ function syntaxHighlight(json) {
 }
 
 function buildOutput() {
-  const delivery = data.deliveryCharges || 0;
+  const delivery = getDeliveryCharge();
   return {
     weightOptions: data.weightOptions,
     products: data.products.map(p => {
@@ -2742,7 +2778,10 @@ function readJSONFile(file) {
         data.packagingCosts = JSON.parse(JSON.stringify(DEFAULT_DATA.packagingCosts));
       }
       if (data.deliveryCharges === undefined) {
-        data.deliveryCharges = DEFAULT_DATA.deliveryCharges;
+        data.deliveryCharges = JSON.parse(JSON.stringify(DEFAULT_DATA.deliveryCharges));
+      }
+      if (typeof data.deliveryCharges === 'number') {
+        data.deliveryCharges = { colombo: data.deliveryCharges, suburban: data.deliveryCharges, other: data.deliveryCharges };
       }
       unsaved = {};
       searchQuery = '';
@@ -2814,12 +2853,17 @@ function renderPackagingTable() {
   if (!tbody) return;
   if (!data.packagingCosts) {
     data.packagingCosts = {
-      glassBottle: { "100g": 120, "250g": 180, "500g": 250, "1kg": 350 },
-      plasticBottle: { "100g": 60, "250g": 90, "500g": 130, "1kg": 180 },
-      zipLockBag: { "100g": 15, "250g": 25, "500g": 35, "1kg": 50 }
+      glassBottle: { "100g": 120, "250g": 145, "500g": 175, "1kg": 210 },
+      plasticBottle: { "100g": 0, "250g": 0, "500g": 0, "1kg": 0 },
+      zipLockBag: { "100g": 10, "250g": 15, "500g": 20, "1kg": 25 }
     };
   }
-  if (data.deliveryCharges === undefined) data.deliveryCharges = 350;
+  if (data.deliveryCharges === undefined) {
+    data.deliveryCharges = JSON.parse(JSON.stringify(DEFAULT_DATA.deliveryCharges));
+  }
+  if (typeof data.deliveryCharges === 'number') {
+    data.deliveryCharges = { colombo: data.deliveryCharges, suburban: data.deliveryCharges, other: data.deliveryCharges };
+  }
   let html = '';
   PKG_TYPES.forEach(pkg => {
     html += '<tr>';
@@ -2831,8 +2875,10 @@ function renderPackagingTable() {
     html += '</tr>';
   });
   tbody.innerHTML = html;
-  const delInput = document.getElementById('deliveryChargeInput');
-  if (delInput) delInput.value = data.deliveryCharges || 0;
+  DELIVERY_AREAS.forEach(area => {
+    const input = document.getElementById('deliveryCharge-' + area.key);
+    if (input) input.value = data.deliveryCharges[area.key] || 0;
+  });
 }
 
 function updatePackagingCost(pkgType, weight, value) {
@@ -2842,8 +2888,11 @@ function updatePackagingCost(pkgType, weight, value) {
   markGlobalUnsaved();
 }
 
-function updateDeliveryCharges(value) {
-  data.deliveryCharges = value === '' ? 0 : Math.max(0, parseInt(value, 10) || 0);
+function updateDeliveryCharges(area, value) {
+  if (typeof data.deliveryCharges !== 'object' || data.deliveryCharges === null) {
+    data.deliveryCharges = JSON.parse(JSON.stringify(DEFAULT_DATA.deliveryCharges));
+  }
+  data.deliveryCharges[area] = value === '' ? 0 : Math.max(0, parseInt(value, 10) || 0);
   markGlobalUnsaved();
 }
 
@@ -2855,7 +2904,7 @@ function markGlobalUnsaved() {
 function buildFinalPriceCards(p, pkgType) {
   if (!data.packagingCosts) return '';
   const pkgCosts = data.packagingCosts[pkgType] || {};
-  const delivery = data.deliveryCharges || 0;
+  const delivery = getDeliveryCharge();
 
   return PKG_WEIGHTS.map(w => {
     const rawPrice = p.weightVariants[w]?.price || 0;
@@ -2910,7 +2959,10 @@ function loadFromLocalStorage() {
           data.packagingCosts = JSON.parse(JSON.stringify(DEFAULT_DATA.packagingCosts));
         }
         if (data.deliveryCharges === undefined) {
-          data.deliveryCharges = DEFAULT_DATA.deliveryCharges;
+          data.deliveryCharges = JSON.parse(JSON.stringify(DEFAULT_DATA.deliveryCharges));
+        }
+        if (typeof data.deliveryCharges === 'number') {
+          data.deliveryCharges = { colombo: data.deliveryCharges, suburban: data.deliveryCharges, other: data.deliveryCharges };
         }
         return true;
       }
@@ -2929,7 +2981,7 @@ function printPriceList() {
   if (!container) return;
 
   const now = new Date().toLocaleDateString('en-LK', { year: 'numeric', month: 'long', day: 'numeric' });
-  const delivery = data.deliveryCharges || 0;
+  const delivery = getDeliveryCharge();
   const pkgCosts = data.packagingCosts || {};
 
   // Build product rows by type
@@ -3012,7 +3064,7 @@ function printPriceList() {
       </table>
 
       <div class="print-summary">
-        <div><strong>Delivery Charges:</strong> Rs. ${formatPrice(delivery)} (flat rate)</div>
+        <div><strong>Delivery Charges:</strong> Colombo: Rs. ${formatPrice(data.deliveryCharges?.colombo || 0)} · Suburban: Rs. ${formatPrice(data.deliveryCharges?.suburban || 0)} · Other: Rs. ${formatPrice(data.deliveryCharges?.other || 0)}</div>
         <div><strong>Formula:</strong> Raw Price + Packaging Cost + Delivery = Total Price</div>
       </div>
 
@@ -3037,7 +3089,7 @@ function printPriceList() {
 
 // Maps 750g to 500g packaging since no separate 750g packaging tier exists
 function getPackagingWeight(w) {
-  return w === '750g' ? '500g' : w;
+  return (w === '750g' || w === '2kg') ? '1kg' : w;
 }
 
 function switchPage(pageNum) {
@@ -3084,7 +3136,7 @@ function renderFinalPricesPage() {
   const container = document.getElementById('finalPricesView');
   if (!container) return;
 
-  const delivery = data.deliveryCharges || 0;
+  const delivery = getDeliveryCharge();
   const types = [
     { key: 'nuts', label: 'Nuts' },
     { key: 'seeds', label: 'Seeds' },
@@ -3126,6 +3178,12 @@ function renderFinalPricesPage() {
       <div class="welcome-title">Final Product Prices</div>
       <div class="welcome-sub">These are the actual selling prices including raw material cost, packaging, and delivery.</div>
     </div>
+    <div class="delivery-field" style="margin-bottom:16px;">
+      <label>Delivery Area</label>
+      <select id="deliveryAreaSelect" onchange="changeDeliveryArea(this.value)" style="background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:7px 10px;outline:none;">
+        ${DELIVERY_AREAS.map(a => `<option value="${a.key}"${selectedDeliveryArea === a.key ? ' selected' : ''}>${a.label} (Rs. ${data.deliveryCharges[a.key] || 0})</option>`).join('')}
+      </select>
+    </div>
     <div class="section" style="overflow-x:auto;">
       <div class="section-body" style="padding:0;">
         <table class="fp-table">
@@ -3137,19 +3195,24 @@ function renderFinalPricesPage() {
               <th>100g</th>
               <th>250g</th>
               <th>500g</th>
-              <th>750g</th>
               <th>1kg</th>
+              <th>2kg</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
     </div>
-    <div style="display:flex;gap:10px;margin-top:20px;">
+    <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;">
       <button class="btn btn-primary" onclick="exportJSON()">↓ Export products.json</button>
       <button class="btn btn-secondary" onclick="showJSONPreview()">{ } JSON Preview</button>
       <button class="btn btn-secondary" onclick="copyJSON()">⎘ Copy JSON</button>
     </div>`;
+}
+
+function changeDeliveryArea(area) {
+  selectedDeliveryArea = area;
+  renderFinalPricesPage();
 }
 
 function updateProductPackagingType(id, pkgType) {
