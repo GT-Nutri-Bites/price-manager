@@ -42,6 +42,8 @@
   --radius-xl: 20px;
   --shadow:    0 4px 24px rgba(0,0,0,0.5);
   --shadow-lg: 0 8px 48px rgba(0,0,0,0.6);
+  --header-height: 56px;
+  --tab-height: 40px;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -224,7 +226,7 @@ header {
 .layout {
   display: grid;
   grid-template-columns: 256px 1fr;
-  height: calc(100vh - 56px);
+  height: calc(100vh - var(--header-height) - var(--tab-height));
   position: relative;
   z-index: 1;
 }
@@ -1474,7 +1476,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   body { background: #fff !important; color: #000 !important; overflow: visible !important; font-size: 10px !important; }
   body::before { display: none !important; }
   header, aside, .sidebar-overlay, #toast, .skip-link, .editor-footer, .tip-bar,
-  .modal-overlay, .mobile-toggle, .btn-danger, .btn-ghost { display: none !important; }
+  .modal-overlay, .mobile-toggle, .btn-danger, .btn-ghost, .tab-bar { display: none !important; }
   .layout { display: block !important; height: auto !important; }
   main { overflow: visible !important; background: #fff !important; }
   .editor-inner { max-width: 100% !important; padding: 0 !important; }
@@ -1499,6 +1501,110 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   @page { size: A4; margin: 10mm; }
 }
 #printPriceList { display: none; }
+
+/* ── Tab bar ── */
+.tab-bar {
+  background: rgba(17,24,32,0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  gap: 0;
+  height: var(--tab-height);
+  position: sticky;
+  top: var(--header-height);
+  z-index: 199;
+}
+.tab-btn {
+  font-family: 'Figtree', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.tab-btn:hover { color: var(--text2); background: var(--surface2); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── Layout sidebar toggle ── */
+.layout.no-sidebar { grid-template-columns: 1fr; }
+.layout.no-sidebar aside { display: none; }
+
+/* ── Final prices table ── */
+.fp-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.fp-table th,
+.fp-table td {
+  padding: 10px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+.fp-table th:last-child,
+.fp-table td:last-child { border-right: none; }
+.fp-table tr:last-child td { border-bottom: none; }
+.fp-table th {
+  background: var(--surface2);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.fp-table td { background: var(--bg2); }
+.fp-table td.fp-product-name {
+  text-align: left;
+  font-family: 'Figtree', sans-serif;
+  font-weight: 600;
+  color: var(--text);
+  font-size: 13px;
+}
+.fp-table td.fp-product-type {
+  text-align: left;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.fp-table td select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 4px 6px;
+  outline: none;
+  cursor: pointer;
+}
+.fp-table td select:focus { border-color: var(--accent); }
+.fp-table .fp-group-row td {
+  background: var(--surface2);
+  font-weight: 700;
+  text-align: left;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text2);
+}
+
+@media (max-width: 600px) {
+  .tab-bar { padding: 0 12px; overflow-x: auto; }
+  .tab-btn { padding: 0 14px; font-size: 12px; }
+}
 </style>
 </head>
 <body>
@@ -1531,6 +1637,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
     <button class="btn btn-primary btn-sm" onclick="exportJSON()" title="Download products.json (Ctrl+S)">↓ Export</button>
   </div>
 </header>
+
+<!-- ── Tab bar ── -->
+<nav class="tab-bar" role="tablist" aria-label="Page navigation">
+  <button class="tab-btn active" onclick="switchPage(1)" role="tab" aria-selected="true" id="tab1" data-page="1">📋 Raw Prices</button>
+  <button class="tab-btn" onclick="switchPage(2)" role="tab" aria-selected="false" id="tab2" data-page="2">📦 Packaging &amp; Delivery</button>
+  <button class="tab-btn" onclick="switchPage(3)" role="tab" aria-selected="false" id="tab3" data-page="3">💰 Final Prices</button>
+</nav>
 
 <div class="layout">
 
@@ -1627,31 +1740,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
         <div class="action-card">
           <div class="action-card-header">
-            <div class="action-card-icon" style="background:rgba(199,125,255,0.1);">📦</div>
-            <div class="action-card-title">Packaging Costs & Pricing</div>
-          </div>
-          <div class="action-card-desc">Configure packaging costs for glass bottles, plastic bottles, and zip lock bags. Set delivery charges. Final price = Raw Value + Package Price + Delivery Charges.</div>
-          <table class="packaging-table" id="packagingTable">
-            <thead>
-              <tr>
-                <th>Packaging Type</th>
-                <th>100g</th>
-                <th>250g</th>
-                <th>500g</th>
-                <th>1kg</th>
-              </tr>
-            </thead>
-            <tbody id="packagingTableBody"></tbody>
-          </table>
-          <div class="delivery-field">
-            <label>Delivery Charges (Rs.)</label>
-            <input type="number" id="deliveryChargeInput" min="0" step="1" value="350" placeholder="0" oninput="updateDeliveryCharges(this.value)" />
-            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);">Applied to all final prices</span>
-          </div>
-        </div>
-
-        <div class="action-card">
-          <div class="action-card-header">
             <div class="action-card-icon" style="background:rgba(245,166,35,0.1);">🖨️</div>
             <div class="action-card-title">Print Price List</div>
           </div>
@@ -1665,6 +1753,50 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
       <!-- Product editor -->
       <div id="productEditor" style="display:none;"></div>
+
+      <!-- Packaging & Delivery (Page 2) -->
+      <div id="packagingDeliveryView" style="display:none;">
+        <div class="welcome-header">
+          <div class="welcome-eyebrow">Configuration</div>
+          <div class="welcome-title">Packaging & Delivery</div>
+          <div class="welcome-sub">Configure packaging costs and delivery charges. These values are used to calculate final selling prices.</div>
+        </div>
+        <div class="action-card">
+          <div class="action-card-header">
+            <div class="action-card-icon" style="background:rgba(199,125,255,0.1);">📦</div>
+            <div class="action-card-title">Packaging Costs</div>
+          </div>
+          <div class="action-card-desc">Set packaging costs per weight for each packaging type.</div>
+          <table class="packaging-table" id="packagingTable">
+            <thead>
+              <tr>
+                <th>Packaging Type</th>
+                <th>100g</th>
+                <th>250g</th>
+                <th>500g</th>
+                <th>1kg</th>
+              </tr>
+            </thead>
+            <tbody id="packagingTableBody"></tbody>
+          </table>
+        </div>
+        <div class="action-card">
+          <div class="action-card-header">
+            <div class="action-card-icon" style="background:rgba(77,166,255,0.1);">🚚</div>
+            <div class="action-card-title">Delivery Charges</div>
+          </div>
+          <div class="action-card-desc">Flat delivery charge applied to all final product prices.</div>
+          <div class="delivery-field" style="margin-top:0;">
+            <label>Delivery Charges (Rs.)</label>
+            <input type="number" id="deliveryChargeInput" min="0" step="1" value="350" placeholder="0" oninput="updateDeliveryCharges(this.value)" />
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);">Applied to all final prices</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Final Prices (Page 3) -->
+      <div id="finalPricesView" style="display:none;"></div>
+
       <!-- Print price list (hidden, only visible in print mode) -->
       <div id="printPriceList"></div>
 
@@ -1725,6 +1857,7 @@ let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
 let currentId = null;
 let unsaved = {};
 let searchQuery = '';
+let currentPage = 1;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Init
@@ -1910,12 +2043,28 @@ function selectProduct(id) {
   // Close mobile sidebar
   closeSidebar();
 
-  document.querySelectorAll('.product-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.product-item').forEach(el => {
+    el.classList.remove('active');
+    el.setAttribute('aria-selected', 'false');
+  });
   const sideEl = document.getElementById(`sidebar-${id}`);
   if (sideEl) {
     sideEl.classList.add('active');
     sideEl.setAttribute('aria-selected', 'true');
     sideEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  // Switch to page 1 if not already there
+  if (currentPage !== 1) {
+    currentPage = 1;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      const isActive = btn.id === 'tab1';
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-selected', isActive);
+    });
+    document.querySelector('.layout').classList.remove('no-sidebar');
+    document.getElementById('packagingDeliveryView').style.display = 'none';
+    document.getElementById('finalPricesView').style.display = 'none';
   }
 
   document.getElementById('welcomeView').style.display = 'none';
@@ -2188,32 +2337,6 @@ function renderEditor(p) {
       </div>
     </div>
 
-    <!-- Packaging & Final Price -->
-    <div class="section">
-      <div class="section-head" onclick="toggleSection(this.parentElement)">
-        <div class="section-title">
-          <div class="section-icon" style="background:rgba(199,125,255,0.1);">📦</div>
-          Final Price Calculator
-        </div>
-        <span class="section-meta">Raw + Packaging + Delivery</span>
-        <span class="section-chevron" aria-hidden="true">▾</span>
-      </div>
-      <div class="section-body">
-        <div style="margin-bottom:10px;font-size:13px;color:var(--text2);">
-          Select packaging type to see final prices. Formula: <strong style="color:var(--accent);">Raw Price + Packaging Cost + Delivery Charges = Total Price</strong>
-        </div>
-        <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;">
-          <label style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);text-transform:uppercase;">Packaging:</label>
-          <select class="sel text-input" style="width:auto;" id="pkgSelect-${p.id}" onchange="updateFinalPriceDisplay(${p.id})">
-            <option value="zipLockBag">🛍️ Zip Lock Bag</option>
-            <option value="plasticBottle">🧴 Plastic Bottle</option>
-            <option value="glassBottle">🫙 Glass Bottle</option>
-          </select>
-        </div>
-        <div id="finalPriceGrid-${p.id}" class="final-price-grid">${buildFinalPriceCards(p, 'zipLockBag')}</div>
-      </div>
-    </div>
-
     <!-- Footer actions -->
     <div class="editor-footer">
       <div class="footer-left">
@@ -2266,10 +2389,27 @@ function updateWeightPrice(id, weight, field, value, inputEl) {
 
   p.weightVariants[weight][field] = (isNaN(val) || val === null) ? null : val;
 
-  if (weight === p.weight) {
-    p.price    = p.weightVariants[weight].price    || 0;
-    p.oldPrice = p.weightVariants[weight].oldPrice || null;
+  // Auto-calculate other weight prices when 1kg is edited
+  // Multipliers represent price scaling per weight (e.g., 100g is ~11% of 1kg price)
+  if (weight === '1kg' && val !== null && !isNaN(val) && val > 0) {
+    const multipliers = { '100g': 0.11, '250g': 0.264, '500g': 0.518, '750g': 0.764 };
+    for (const [w, mult] of Object.entries(multipliers)) {
+      const calcVal = Math.round(val * mult);
+      if (!p.weightVariants[w]) p.weightVariants[w] = { price: null, oldPrice: null };
+      p.weightVariants[w][field] = calcVal;
+      const cards = document.querySelectorAll('.price-card');
+      const wIdx = WEIGHTS.indexOf(w);
+      if (cards[wIdx]) {
+        const inputs = cards[wIdx].querySelectorAll('input[type="number"]');
+        const inputIdx = field === 'price' ? 0 : 1;
+        if (inputs[inputIdx]) inputs[inputIdx].value = calcVal;
+      }
+    }
   }
+
+  // Update product's display price from default weight
+  p.price    = p.weightVariants[p.weight]?.price    || 0;
+  p.oldPrice = p.weightVariants[p.weight]?.oldPrice || null;
 
   markUnsaved(id);
   updateStats();
@@ -2455,7 +2595,8 @@ function addProduct() {
     fullDescription: "Full product description here.",
     benefits: ["Benefit 1", "Benefit 2"],
     nutrition: { calories: "0", protein: "0g", fat: "0g", carbs: "0g", fiber: "0g" },
-    emoji: "🥜", useEmoji: true
+    emoji: "🥜", useEmoji: true,
+    packagingType: "zipLockBag"
   };
   data.products.push(newProduct);
   unsaved[newId] = true;
@@ -2509,9 +2650,37 @@ function syntaxHighlight(json) {
 }
 
 function buildOutput() {
+  const delivery = data.deliveryCharges || 0;
   return {
     weightOptions: data.weightOptions,
-    products: data.products,
+    products: data.products.map(p => {
+      const product = JSON.parse(JSON.stringify(p));
+      const pkgType = p.packagingType || 'zipLockBag';
+      const pkgCosts = data.packagingCosts?.[pkgType] || {};
+
+      WEIGHTS.forEach(w => {
+        if (product.weightVariants[w]) {
+          const pkgWeight = getPackagingWeight(w);
+          const pkgCost = pkgCosts[pkgWeight] || 0;
+          if (product.weightVariants[w].price != null) {
+            product.weightVariants[w].price = product.weightVariants[w].price + pkgCost + delivery;
+          }
+          if (product.weightVariants[w].oldPrice != null) {
+            product.weightVariants[w].oldPrice = product.weightVariants[w].oldPrice + pkgCost + delivery;
+          }
+        }
+      });
+
+      const dw = product.weight;
+      const dwPkgWeight = getPackagingWeight(dw);
+      const dwPkgCost = pkgCosts[dwPkgWeight] || 0;
+      product.price = (p.weightVariants[dw]?.price || 0) + dwPkgCost + delivery;
+      product.oldPrice = p.weightVariants[dw]?.oldPrice != null
+        ? p.weightVariants[dw].oldPrice + dwPkgCost + delivery
+        : null;
+
+      return product;
+    }),
     iconColors: data.iconColors,
     packagingCosts: data.packagingCosts,
     deliveryCharges: data.deliveryCharges
@@ -2861,6 +3030,135 @@ function printPriceList() {
 
   // Trigger print
   setTimeout(() => window.print(), 100);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tab / Page switching
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Maps 750g to 500g packaging since no separate 750g packaging tier exists
+function getPackagingWeight(w) {
+  return w === '750g' ? '500g' : w;
+}
+
+function switchPage(pageNum) {
+  currentPage = pageNum;
+
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    const isActive = parseInt(btn.dataset.page) === pageNum;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', isActive);
+  });
+
+  const layout = document.querySelector('.layout');
+  if (pageNum === 2) {
+    layout.classList.add('no-sidebar');
+  } else {
+    layout.classList.remove('no-sidebar');
+  }
+
+  document.getElementById('welcomeView').style.display = 'none';
+  document.getElementById('productEditor').style.display = 'none';
+  document.getElementById('packagingDeliveryView').style.display = 'none';
+  document.getElementById('finalPricesView').style.display = 'none';
+
+  if (pageNum === 1) {
+    if (currentId) {
+      document.getElementById('productEditor').style.display = 'block';
+      const p = getProduct(currentId);
+      if (p) renderEditor(p);
+    } else {
+      document.getElementById('welcomeView').style.display = 'block';
+    }
+  } else if (pageNum === 2) {
+    document.getElementById('packagingDeliveryView').style.display = 'block';
+    renderPackagingTable();
+  } else if (pageNum === 3) {
+    renderFinalPricesPage();
+    document.getElementById('finalPricesView').style.display = 'block';
+  }
+
+  document.getElementById('mainPanel').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderFinalPricesPage() {
+  const container = document.getElementById('finalPricesView');
+  if (!container) return;
+
+  const delivery = data.deliveryCharges || 0;
+  const types = [
+    { key: 'nuts', label: 'Nuts' },
+    { key: 'seeds', label: 'Seeds' },
+    { key: 'mix', label: 'Mixes' }
+  ];
+
+  let rows = '';
+  types.forEach(t => {
+    const products = data.products.filter(p => p.type === t.key);
+    if (products.length === 0) return;
+    rows += `<tr class="fp-group-row"><td colspan="8">${t.label} (${products.length})</td></tr>`;
+    products.forEach(p => {
+      const pkgType = p.packagingType || 'zipLockBag';
+      const pkgCosts = data.packagingCosts?.[pkgType] || {};
+      rows += `<tr>
+        <td class="fp-product-name">${p.emoji} ${escHtml(p.name)}</td>
+        <td class="fp-product-type">${p.type}</td>
+        <td>
+          <select onchange="updateProductPackagingType(${p.id},this.value)">
+            <option value="zipLockBag"${pkgType === 'zipLockBag' ? ' selected' : ''}>🛍️ Zip Lock</option>
+            <option value="plasticBottle"${pkgType === 'plasticBottle' ? ' selected' : ''}>🧴 Plastic</option>
+            <option value="glassBottle"${pkgType === 'glassBottle' ? ' selected' : ''}>🫙 Glass</option>
+          </select>
+        </td>`;
+      WEIGHTS.forEach(w => {
+        const raw = p.weightVariants[w]?.price || 0;
+        const pkgWeight = getPackagingWeight(w);
+        const pkg = pkgCosts[pkgWeight] || 0;
+        const total = raw + pkg + delivery;
+        rows += `<td style="color:var(--accent);font-weight:600;">Rs. ${formatPrice(total)}</td>`;
+      });
+      rows += '</tr>';
+    });
+  });
+
+  container.innerHTML = `
+    <div class="welcome-header">
+      <div class="welcome-eyebrow">Pricing</div>
+      <div class="welcome-title">Final Product Prices</div>
+      <div class="welcome-sub">These are the actual selling prices including raw material cost, packaging, and delivery.</div>
+    </div>
+    <div class="section" style="overflow-x:auto;">
+      <div class="section-body" style="padding:0;">
+        <table class="fp-table">
+          <thead>
+            <tr>
+              <th style="text-align:left;">Product Name</th>
+              <th>Type</th>
+              <th>Packaging</th>
+              <th>100g</th>
+              <th>250g</th>
+              <th>500g</th>
+              <th>750g</th>
+              <th>1kg</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;">
+      <button class="btn btn-primary" onclick="exportJSON()">↓ Export products.json</button>
+      <button class="btn btn-secondary" onclick="showJSONPreview()">{ } JSON Preview</button>
+      <button class="btn btn-secondary" onclick="copyJSON()">⎘ Copy JSON</button>
+    </div>`;
+}
+
+function updateProductPackagingType(id, pkgType) {
+  const p = getProduct(id);
+  if (!p) return;
+  p.packagingType = pkgType;
+  markUnsaved(id);
+  renderFinalPricesPage();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
