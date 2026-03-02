@@ -1849,7 +1849,7 @@ const DEFAULT_DATA = {
   "iconColors":{"amber":"text-amber-600","green":"text-green-600","orange":"text-orange-600","purple":"text-purple-600","yellow":"text-yellow-700","red":"text-red-700","lime":"text-lime-700","pink":"text-pink-700"},
   "packagingCosts": {
     "glassBottle": { "100g": 120, "250g": 145, "500g": 175, "1kg": 210 },
-    "plasticBottle": { "100g": 0, "250g": 0, "500g": 0, "1kg": 0 },
+    "plasticBottle": { "100g": 0, "250g": 0, "500g": 0, "1kg": 0 }, /* prices not yet available */
     "zipLockBag": { "100g": 10, "250g": 15, "500g": 20, "1kg": 25 }
   },
   "deliveryCharges": {
@@ -1887,9 +1887,9 @@ const DELIVERY_AREAS = [
 
 function getDeliveryCharge() {
   if (typeof data.deliveryCharges === 'object' && data.deliveryCharges !== null) {
-    return data.deliveryCharges[selectedDeliveryArea] || 0;
+    return data.deliveryCharges[selectedDeliveryArea] || DEFAULT_DATA.deliveryCharges.colombo;
   }
-  return data.deliveryCharges || 0;
+  return typeof data.deliveryCharges === 'number' ? data.deliveryCharges : DEFAULT_DATA.deliveryCharges.colombo;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -3087,7 +3087,7 @@ function printPriceList() {
 // Tab / Page switching
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Maps 750g to 500g packaging since no separate 750g packaging tier exists
+// Maps 750g and 2kg to nearest packaging tier (no separate tiers exist for these weights)
 function getPackagingWeight(w) {
   return (w === '750g' || w === '2kg') ? '1kg' : w;
 }
