@@ -1637,7 +1637,7 @@ function renderSidebar() {
       const hasSale = p.oldPrice !== null;
       const isUnsaved = unsaved[p.id];
       html += `
-      <div class="product-item${currentId === p.id ? ' active' : ''}" onclick="selectProduct(${p.id})" id="sidebar-${p.id}" role="option" aria-selected="${currentId === p.id}" tabindex="0" onkeydown="if(event.key==='Enter')selectProduct(${p.id})">
+      <div class="product-item${currentId === p.id ? ' active' : ''}" onclick="selectProduct(${p.id})" id="sidebar-${p.id}" role="option" aria-selected="${currentId === p.id}" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectProduct(${p.id})}">
         <div class="product-emoji-wrap">${p.emoji}</div>
         <div class="product-item-info">
           <div class="product-item-name">${escHtml(p.name)}</div>
@@ -1721,7 +1721,7 @@ function renderEditor(p) {
         <input type="number" min="0" step="1"
           value="${v.price || ''}" placeholder="0"
           aria-label="Current price for ${w}"
-          oninput="updateWeightPrice(${p.id},'${w}','price',this.value)" />
+          oninput="updateWeightPrice(${p.id},'${w}','price',this.value,this)" />
       </div>
       <div class="price-field-label">Strikethrough Price</div>
       <div class="price-input-wrap old-price">
@@ -1729,7 +1729,7 @@ function renderEditor(p) {
         <input type="number" min="0" step="1"
           value="${v.oldPrice !== null ? v.oldPrice : ''}" placeholder="none"
           aria-label="Strikethrough price for ${w}"
-          oninput="updateWeightPrice(${p.id},'${w}','oldPrice',this.value)" />
+          oninput="updateWeightPrice(${p.id},'${w}','oldPrice',this.value,this)" />
       </div>
       ${disc ? `<div class="discount-badge">−${disc}% off</div>` : ''}
     </div>`;
@@ -1991,7 +1991,7 @@ function markUnsaved(id) {
   }
 }
 
-function updateWeightPrice(id, weight, field, value) {
+function updateWeightPrice(id, weight, field, value, inputEl) {
   const p = getProduct(id);
   if (!p) return;
   if (!p.weightVariants[weight]) p.weightVariants[weight] = { price: null, oldPrice: null };
@@ -1999,11 +1999,11 @@ function updateWeightPrice(id, weight, field, value) {
 
   // Validate: prevent negative values
   if (val !== null && val < 0) {
-    event.target.classList.add('invalid');
+    if (inputEl) inputEl.classList.add('invalid');
     toast('⚠ Price cannot be negative', 'warning');
     return;
   }
-  if (event && event.target) event.target.classList.remove('invalid');
+  if (inputEl) inputEl.classList.remove('invalid');
 
   p.weightVariants[weight][field] = (isNaN(val) || val === null) ? null : val;
 
