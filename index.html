@@ -667,6 +667,47 @@ main {
   display: inline-block;
 }
 
+/* ── Realtime cost display ── */
+.rt-cost {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  background: rgba(34,197,94,0.06);
+  border: 1px solid rgba(34,197,94,0.15);
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+}
+.rt-cost-label {
+  color: var(--muted);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.rt-cost-value {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* ── Auto-save indicator ── */
+.auto-save-indicator {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.auto-save-indicator.show {
+  opacity: 1;
+}
+
 /* ── Form fields ── */
 .form-row {
   display: grid;
@@ -1826,6 +1867,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <div class="header-right">
     <button class="btn btn-ghost btn-sm" onclick="loadDefaultData()" title="Reset all data to defaults">↺ Reset</button>
     <button class="btn btn-secondary btn-sm" onclick="saveToLocalStorage()" title="Save data to browser (Ctrl+Shift+S)">💾 Save</button>
+    <span class="auto-save-indicator" id="autoSaveIndicator">✓ auto-saved</span>
     <button class="btn btn-secondary btn-sm" onclick="showJSONPreview()" title="Preview JSON output">{ } JSON</button>
     <button class="btn btn-secondary btn-sm" onclick="printPriceList()" title="Print price list as PDF">🖨 Print</button>
     <button class="btn btn-primary btn-sm" onclick="exportJSON()" title="Download products.json (Ctrl+S)">↓ Export</button>
@@ -2080,12 +2122,55 @@ let searchQuery = '';
 let currentPage = 1;
 let selectedDeliveryArea = 'colombo';
 let includeDelivery = false;
+let autoSaveTimer = null;
 
 const DELIVERY_AREAS = [
   { key: "colombo", label: "Colombo" },
   { key: "suburban", label: "Gampaha / Galle / Kurunegala" },
   { key: "other", label: "Any Other Area" }
 ];
+
+function scheduleAutoSave() {
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      const indicator = document.getElementById('autoSaveIndicator');
+      if (indicator) {
+        indicator.classList.add('show');
+        setTimeout(() => indicator.classList.remove('show'), 2000);
+      }
+    } catch (e) {
+      console.warn('Auto-save failed:', e);
+    }
+  }, 1000);
+}
+
+function updateRealtimeCosts(productId) {
+  const p = getProduct(productId);
+  if (!p) return;
+  const pkgType = p.packagingType || 'zipLockBag';
+  const pkgCosts = data.packagingCosts?.[pkgType] || {};
+  const delivery = getDeliveryCharge();
+  const margin = data.profitMargin || 0;
+
+  WEIGHTS.forEach(w => {
+    const card = document.querySelector(`.price-card[data-weight="${w}"]`);
+    if (!card) return;
+    const rawPrice = p.weightVariants[w]?.price || 0;
+    const pkgCost = pkgCosts[w] || 0;
+    const subtotal = rawPrice + pkgCost + delivery;
+    const total = Math.round(subtotal * (1 + margin / 100));
+
+    let costEl = card.querySelector('.rt-cost');
+    if (!costEl) {
+      costEl = document.createElement('div');
+      costEl.className = 'rt-cost';
+      card.appendChild(costEl);
+    }
+    costEl.innerHTML = `<span class="rt-cost-label">Sell Price</span><span class="rt-cost-value">Rs. ${formatPrice(total)}</span>`;
+  });
+}
 
 function getDeliveryCharge() {
   if (!includeDelivery) return 0;
@@ -2333,10 +2418,19 @@ function renderEditor(p) {
     : null;
 
   // Price cards
+  const pkgType = p.packagingType || 'zipLockBag';
+  const pkgCostsForCards = data.packagingCosts?.[pkgType] || {};
+  const deliveryForCards = getDeliveryCharge();
+  const marginForCards = data.profitMargin || 0;
+
   const weightCardsHTML = WEIGHTS.map(w => {
     const v = p.weightVariants[w] || { price: 0, oldPrice: null };
     const isDefault = p.weight === w;
     const disc = v.oldPrice ? Math.round((1 - v.price / v.oldPrice) * 100) : null;
+    const rawPrice = v.price || 0;
+    const pkgCost = pkgCostsForCards[w] || 0;
+    const subtotal = rawPrice + pkgCost + deliveryForCards;
+    const total = Math.round(subtotal * (1 + marginForCards / 100));
     return `
     <div class="price-card${isDefault ? ' is-default' : ''}" data-weight="${w}">
       <div class="price-card-weight">
@@ -2360,6 +2454,7 @@ function renderEditor(p) {
           oninput="updateWeightPrice(${p.id},'${w}','oldPrice',this.value,this)" />
       </div>
       ${disc ? `<div class="discount-badge">−${disc}% off</div>` : ''}
+      <div class="rt-cost"><span class="rt-cost-label">Sell Price</span><span class="rt-cost-value">Rs. ${formatPrice(total)}</span></div>
     </div>`;
   }).join('');
 
@@ -2618,6 +2713,7 @@ function markUnsaved(id) {
       inds.appendChild(dot);
     }
   }
+  scheduleAutoSave();
 }
 
 function updateWeightPrice(id, weight, field, value, inputEl) {
@@ -2667,6 +2763,8 @@ function updateWeightPrice(id, weight, field, value, inputEl) {
   }
   // Update summary row live
   updatePriceSummaryLive(p);
+  // Update realtime cost calculations
+  updateRealtimeCosts(id);
 }
 
 function updatePriceSummaryLive(p) {
@@ -2995,13 +3093,19 @@ function readJSONFile(file) {
       if (typeof data.deliveryCharges === 'number') {
         data.deliveryCharges = { colombo: data.deliveryCharges, suburban: data.deliveryCharges, other: data.deliveryCharges };
       }
+      if (data.profitMargin === undefined) {
+        data.profitMargin = DEFAULT_DATA.profitMargin;
+      }
       unsaved = {};
       searchQuery = '';
       document.getElementById('sidebarSearch').value = '';
+      const marginInput = document.getElementById('profitMarginInput');
+      if (marginInput) marginInput.value = data.profitMargin;
       renderSidebar();
       updateStats();
       renderPackagingTable();
-      selectProduct(data.products[0].id);
+      if (data.products.length > 0) selectProduct(data.products[0].id);
+      scheduleAutoSave();
       toast(`📥 Loaded ${data.products.length} products from ${file.name}`);
     } catch(err) {
       toast('⚠ Error: ' + err.message, 'error');
@@ -3116,6 +3220,7 @@ function updateProfitMargin(value) {
 function markGlobalUnsaved() {
   // Mark all products as having potential changes since global settings changed
   unsaved._global = true;
+  scheduleAutoSave();
 }
 
 function buildFinalPriceCards(p, pkgType) {
@@ -3157,11 +3262,7 @@ function updateFinalPriceDisplay(id) {
 // ─────────────────────────────────────────────────────────────────────────────
 function saveToLocalStorage() {
   try {
-    const output = buildOutput();
-    output.packagingCosts = data.packagingCosts;
-    output.deliveryCharges = data.deliveryCharges;
-    output.profitMargin = data.profitMargin;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(output));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     unsaved = {};
     renderSidebar();
     toast('💾 Price list saved to browser');
