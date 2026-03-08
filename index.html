@@ -9,6 +9,8 @@
 <title>GT Nutri Bites — Price Manager</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.18/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.18/vfs_fonts.js"></script>
 <style>
 /* ── Variables ───────────────────────────────── */
 :root {
@@ -1492,6 +1494,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   #productEditor { display: none !important; }
   #packagingDeliveryView { display: none !important; }
   #finalPricesView { display: none !important; }
+  #quotationView { display: none !important; }
   #printPriceList { display: block !important; }
   .print-page { page-break-inside: avoid; padding: 10px; }
   .print-page * { color: #000 !important; }
@@ -1511,6 +1514,184 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   @page { size: A4; margin: 10mm; }
 }
 #printPriceList { display: none; }
+
+/* ── Quotation styles ── */
+.quot-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+@media (max-width: 600px) {
+  .quot-form-grid { grid-template-columns: 1fr; }
+}
+.quot-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.quot-form-group label {
+  font-family: 'Figtree', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.quot-form-group input,
+.quot-form-group select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.quot-form-group input:focus,
+.quot-form-group select:focus {
+  border-color: var(--accent);
+  background: var(--surface2);
+}
+.quot-product-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.quot-product-table th {
+  font-family: 'Figtree', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text2);
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border2);
+  white-space: nowrap;
+}
+.quot-product-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.quot-product-table tr:hover {
+  background: rgba(34,212,114,0.03);
+}
+.quot-product-table .quot-check-cell {
+  width: 40px;
+  text-align: center;
+}
+.quot-product-table .quot-check-cell input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+.quot-product-table .quot-qty-input {
+  width: 64px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 6px 8px;
+  text-align: center;
+  outline: none;
+}
+.quot-product-table .quot-qty-input:focus {
+  border-color: var(--accent);
+}
+.quot-product-table .quot-weight-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 6px 8px;
+  outline: none;
+}
+.quot-product-table .quot-weight-select:focus {
+  border-color: var(--accent);
+}
+.quot-product-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.quot-product-name-cell .quot-emoji {
+  font-size: 18px;
+}
+.quot-price-cell {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.quot-total-cell {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--amber);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.quot-group-row td {
+  background: var(--surface2) !important;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text2);
+  padding: 8px 12px !important;
+}
+.quot-summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(34,212,114,0.08), rgba(34,212,114,0.02));
+  border: 1px solid rgba(34,212,114,0.2);
+  border-radius: var(--radius);
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.quot-summary-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.quot-summary-stat .quot-stat-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text2);
+}
+.quot-summary-stat .quot-stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.quot-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.quot-empty-msg {
+  text-align: center;
+  padding: 32px 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.quot-disabled-row {
+  opacity: 0.4;
+}
 
 /* ── Tab bar ── */
 .tab-bar {
@@ -1653,6 +1834,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   <button class="tab-btn active" onclick="switchPage(1)" role="tab" aria-selected="true" id="tab1" data-page="1">📋 Raw Prices</button>
   <button class="tab-btn" onclick="switchPage(2)" role="tab" aria-selected="false" id="tab2" data-page="2">📦 Packaging &amp; Delivery</button>
   <button class="tab-btn" onclick="switchPage(3)" role="tab" aria-selected="false" id="tab3" data-page="3">💰 Final Prices</button>
+  <button class="tab-btn" onclick="switchPage(4)" role="tab" aria-selected="false" id="tab4" data-page="4">📄 Quotation</button>
 </nav>
 
 <div class="layout">
@@ -1826,6 +2008,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 
       <!-- Final Prices (Page 3) -->
       <div id="finalPricesView" style="display:none;"></div>
+
+      <!-- Quotation Generator (Page 4) -->
+      <div id="quotationView" style="display:none;"></div>
 
       <!-- Print price list (hidden, only visible in print mode) -->
       <div id="printPriceList"></div>
@@ -3141,7 +3326,7 @@ function switchPage(pageNum) {
   });
 
   const layout = document.querySelector('.layout');
-  if (pageNum === 2) {
+  if (pageNum === 2 || pageNum === 4) {
     layout.classList.add('no-sidebar');
   } else {
     layout.classList.remove('no-sidebar');
@@ -3151,6 +3336,7 @@ function switchPage(pageNum) {
   document.getElementById('productEditor').style.display = 'none';
   document.getElementById('packagingDeliveryView').style.display = 'none';
   document.getElementById('finalPricesView').style.display = 'none';
+  document.getElementById('quotationView').style.display = 'none';
 
   if (pageNum === 1) {
     if (currentId) {
@@ -3166,6 +3352,9 @@ function switchPage(pageNum) {
   } else if (pageNum === 3) {
     renderFinalPricesPage();
     document.getElementById('finalPricesView').style.display = 'block';
+  } else if (pageNum === 4) {
+    renderQuotationPage();
+    document.getElementById('quotationView').style.display = 'block';
   }
 
   document.getElementById('mainPanel').scrollTo({ top: 0, behavior: 'smooth' });
@@ -3274,6 +3463,569 @@ function updateProductPackagingType(id, pkgType) {
   p.packagingType = pkgType;
   markUnsaved(id);
   renderFinalPricesPage();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Quotation Generator
+// ─────────────────────────────────────────────────────────────────────────────
+let quotationSelections = {};
+
+function getQuotationDefaults() {
+  const today = new Date();
+  const validUntil = new Date(today);
+  validUntil.setDate(validUntil.getDate() + 14);
+  return {
+    customerName: '',
+    customerPhone: '',
+    customerEmail: '',
+    issueDate: today.toISOString().split('T')[0],
+    validityDays: 14,
+    deliveryArea: 'colombo',
+    includeDeliveryInQuot: true,
+    packagingType: 'zipLockBag'
+  };
+}
+
+let quotationMeta = getQuotationDefaults();
+
+function initQuotationSelections() {
+  data.products.forEach(p => {
+    if (!quotationSelections[p.id]) {
+      quotationSelections[p.id] = { selected: false, weight: '250g', qty: 1 };
+    }
+  });
+  // Remove selections for products that no longer exist
+  const productIds = new Set(data.products.map(p => p.id));
+  Object.keys(quotationSelections).forEach(id => {
+    if (!productIds.has(parseInt(id))) delete quotationSelections[id];
+  });
+}
+
+function getQuotFinalPrice(product, weight) {
+  const raw = product.weightVariants[weight]?.price || 0;
+  const pkgType = quotationMeta.packagingType || 'zipLockBag';
+  const pkgWeight = getPackagingWeight(weight);
+  const pkgCost = data.packagingCosts?.[pkgType]?.[pkgWeight] || 0;
+  const delivery = quotationMeta.includeDeliveryInQuot
+    ? (data.deliveryCharges?.[quotationMeta.deliveryArea] || 0)
+    : 0;
+  const margin = data.profitMargin || 0;
+  const subtotal = raw + pkgCost + delivery;
+  return Math.round(subtotal * (1 + margin / 100));
+}
+
+function toggleQuotProduct(id) {
+  if (!quotationSelections[id]) quotationSelections[id] = { selected: false, weight: '250g', qty: 1 };
+  quotationSelections[id].selected = !quotationSelections[id].selected;
+  renderQuotationPage();
+}
+
+function updateQuotQty(id, value) {
+  if (!quotationSelections[id]) return;
+  quotationSelections[id].qty = Math.max(1, parseInt(value) || 1);
+  renderQuotationPage();
+}
+
+function updateQuotWeight(id, value) {
+  if (!quotationSelections[id]) return;
+  quotationSelections[id].weight = value;
+  renderQuotationPage();
+}
+
+function updateQuotMeta(field, value) {
+  quotationMeta[field] = value;
+  renderQuotationPage();
+}
+
+function selectAllQuotProducts() {
+  data.products.forEach(p => {
+    if (!quotationSelections[p.id]) quotationSelections[p.id] = { selected: false, weight: '250g', qty: 1 };
+    quotationSelections[p.id].selected = true;
+  });
+  renderQuotationPage();
+}
+
+function deselectAllQuotProducts() {
+  Object.keys(quotationSelections).forEach(id => {
+    quotationSelections[id].selected = false;
+  });
+  renderQuotationPage();
+}
+
+function renderQuotationPage() {
+  const container = document.getElementById('quotationView');
+  if (!container) return;
+  initQuotationSelections();
+
+  const types = [
+    { key: 'nuts', label: 'Nuts' },
+    { key: 'seeds', label: 'Seeds' },
+    { key: 'mix', label: 'Mixes' }
+  ];
+
+  let selectedCount = 0;
+  let grandTotal = 0;
+  let totalItems = 0;
+
+  // Calculate totals
+  data.products.forEach(p => {
+    const sel = quotationSelections[p.id];
+    if (sel && sel.selected) {
+      const unitPrice = getQuotFinalPrice(p, sel.weight);
+      const lineTotal = unitPrice * sel.qty;
+      grandTotal += lineTotal;
+      totalItems += sel.qty;
+      selectedCount++;
+    }
+  });
+
+  // Build product rows
+  let rows = '';
+  types.forEach(t => {
+    const products = data.products.filter(p => p.type === t.key);
+    if (products.length === 0) return;
+    rows += `<tr class="quot-group-row"><td colspan="7">${t.label} (${products.length})</td></tr>`;
+    products.forEach(p => {
+      const sel = quotationSelections[p.id] || { selected: false, weight: '250g', qty: 1 };
+      const unitPrice = getQuotFinalPrice(p, sel.weight);
+      const lineTotal = unitPrice * sel.qty;
+      const disabledClass = sel.selected ? '' : ' quot-disabled-row';
+      rows += `<tr class="${disabledClass}">
+        <td class="quot-check-cell">
+          <input type="checkbox" ${sel.selected ? 'checked' : ''} onchange="toggleQuotProduct(${p.id})" aria-label="Select ${escHtml(p.name)}" />
+        </td>
+        <td>
+          <div class="quot-product-name-cell">
+            <span class="quot-emoji">${p.emoji}</span>
+            <span>${escHtml(p.name)}</span>
+          </div>
+        </td>
+        <td>
+          <select class="quot-weight-select" value="${sel.weight}" onchange="updateQuotWeight(${p.id},this.value)" ${sel.selected ? '' : 'disabled'} aria-label="Weight for ${escHtml(p.name)}">
+            ${WEIGHTS.map(w => `<option value="${w}"${sel.weight === w ? ' selected' : ''}>${w}</option>`).join('')}
+          </select>
+        </td>
+        <td>
+          <input type="number" class="quot-qty-input" value="${sel.qty}" min="1" oninput="updateQuotQty(${p.id},this.value)" ${sel.selected ? '' : 'disabled'} aria-label="Quantity for ${escHtml(p.name)}" />
+        </td>
+        <td class="quot-price-cell">Rs. ${formatPrice(unitPrice)}</td>
+        <td class="quot-total-cell">${sel.selected ? 'Rs. ' + formatPrice(lineTotal) : '—'}</td>
+      </tr>`;
+    });
+  });
+
+  const pkgLabel = { zipLockBag: '🛍️ Zip Lock Bag', plasticBottle: '🧴 Plastic Bottle', glassBottle: '🫙 Glass Bottle' };
+
+  container.innerHTML = `
+    <div class="welcome-header">
+      <div class="welcome-eyebrow">Generate</div>
+      <div class="welcome-title">Customer Quotation</div>
+      <div class="welcome-sub">Select products, set quantities and weights, then generate a professional PDF quotation for your customer.</div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+        <span class="section-toggle">▾</span>
+        <span class="section-title">📋 Quotation Details</span>
+      </div>
+      <div class="section-body">
+        <div class="quot-form-grid">
+          <div class="quot-form-group">
+            <label for="quotCustomerName">Customer Name</label>
+            <input type="text" id="quotCustomerName" placeholder="e.g. John Doe" value="${escHtml(quotationMeta.customerName)}" oninput="quotationMeta.customerName=this.value" />
+          </div>
+          <div class="quot-form-group">
+            <label for="quotCustomerPhone">Phone Number</label>
+            <input type="text" id="quotCustomerPhone" placeholder="e.g. +94 77 123 4567" value="${escHtml(quotationMeta.customerPhone)}" oninput="quotationMeta.customerPhone=this.value" />
+          </div>
+          <div class="quot-form-group">
+            <label for="quotCustomerEmail">Email Address</label>
+            <input type="email" id="quotCustomerEmail" placeholder="e.g. john@example.com" value="${escHtml(quotationMeta.customerEmail)}" oninput="quotationMeta.customerEmail=this.value" />
+          </div>
+          <div class="quot-form-group">
+            <label for="quotIssueDate">Date of Issue</label>
+            <input type="date" id="quotIssueDate" value="${quotationMeta.issueDate}" onchange="updateQuotMeta('issueDate',this.value)" />
+          </div>
+          <div class="quot-form-group">
+            <label for="quotValidity">Validity Period</label>
+            <select id="quotValidity" onchange="updateQuotMeta('validityDays',parseInt(this.value))">
+              <option value="7"${quotationMeta.validityDays === 7 ? ' selected' : ''}>7 Days</option>
+              <option value="14"${quotationMeta.validityDays === 14 ? ' selected' : ''}>14 Days</option>
+              <option value="30"${quotationMeta.validityDays === 30 ? ' selected' : ''}>30 Days</option>
+              <option value="60"${quotationMeta.validityDays === 60 ? ' selected' : ''}>60 Days</option>
+              <option value="90"${quotationMeta.validityDays === 90 ? ' selected' : ''}>90 Days</option>
+            </select>
+          </div>
+          <div class="quot-form-group">
+            <label for="quotPackaging">Packaging Type</label>
+            <select id="quotPackaging" onchange="updateQuotMeta('packagingType',this.value)">
+              <option value="zipLockBag"${quotationMeta.packagingType === 'zipLockBag' ? ' selected' : ''}>🛍️ Zip Lock Bag</option>
+              <option value="plasticBottle"${quotationMeta.packagingType === 'plasticBottle' ? ' selected' : ''}>🧴 Plastic Bottle</option>
+              <option value="glassBottle"${quotationMeta.packagingType === 'glassBottle' ? ' selected' : ''}>🫙 Glass Bottle</option>
+            </select>
+          </div>
+          <div class="quot-form-group">
+            <label for="quotDeliveryArea">Delivery Area</label>
+            <select id="quotDeliveryArea" onchange="updateQuotMeta('deliveryArea',this.value)">
+              ${DELIVERY_AREAS.map(a => `<option value="${a.key}"${quotationMeta.deliveryArea === a.key ? ' selected' : ''}>${a.label} (Rs. ${data.deliveryCharges?.[a.key] || 0})</option>`).join('')}
+            </select>
+          </div>
+          <div class="quot-form-group" style="align-items:flex-start;justify-content:flex-end;">
+            <label>&nbsp;</label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;text-transform:none;font-size:13px;color:var(--text);">
+              <input type="checkbox" ${quotationMeta.includeDeliveryInQuot ? 'checked' : ''} onchange="updateQuotMeta('includeDeliveryInQuot',this.checked)" style="cursor:pointer;accent-color:var(--accent);" />
+              Include Delivery Charges
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header" onclick="this.parentElement.classList.toggle('collapsed')">
+        <span class="section-toggle">▾</span>
+        <span class="section-title">🥜 Select Products</span>
+        <div style="margin-left:auto;display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();selectAllQuotProducts()">Select All</button>
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();deselectAllQuotProducts()">Clear All</button>
+        </div>
+      </div>
+      <div class="section-body" style="padding:0;">
+        <div style="overflow-x:auto;">
+          <table class="quot-product-table">
+            <thead>
+              <tr>
+                <th class="quot-check-cell">✓</th>
+                <th>Product</th>
+                <th>Weight</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="quot-summary-bar">
+      <div class="quot-summary-stat">
+        <span class="quot-stat-label">Selected Products</span>
+        <span class="quot-stat-value">${selectedCount}</span>
+      </div>
+      <div class="quot-summary-stat">
+        <span class="quot-stat-label">Total Items</span>
+        <span class="quot-stat-value">${totalItems}</span>
+      </div>
+      <div class="quot-summary-stat">
+        <span class="quot-stat-label">Grand Total</span>
+        <span class="quot-stat-value" style="font-size:24px;">Rs. ${formatPrice(grandTotal)}</span>
+      </div>
+    </div>
+
+    <div class="quot-actions">
+      <button class="btn btn-primary" onclick="generateQuotationPDF()" ${selectedCount === 0 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>
+        📄 Generate PDF Quotation
+      </button>
+    </div>`;
+}
+
+function generateQuotationPDF() {
+  if (typeof pdfMake === 'undefined') {
+    toast('⚠ PDF library not loaded. Please check your internet connection.', 'error');
+    return;
+  }
+
+  initQuotationSelections();
+
+  // Gather selected products
+  const selectedProducts = [];
+  data.products.forEach(p => {
+    const sel = quotationSelections[p.id];
+    if (sel && sel.selected) {
+      const unitPrice = getQuotFinalPrice(p, sel.weight);
+      selectedProducts.push({
+        name: p.name,
+        emoji: p.emoji,
+        type: p.type,
+        weight: sel.weight,
+        qty: sel.qty,
+        unitPrice: unitPrice,
+        lineTotal: unitPrice * sel.qty
+      });
+    }
+  });
+
+  if (selectedProducts.length === 0) {
+    toast('⚠ Please select at least one product', 'warning');
+    return;
+  }
+
+  const grandTotal = selectedProducts.reduce((sum, p) => sum + p.lineTotal, 0);
+  const totalItems = selectedProducts.reduce((sum, p) => sum + p.qty, 0);
+
+  // Format dates
+  const issueDate = new Date(quotationMeta.issueDate);
+  const validUntil = new Date(issueDate);
+  validUntil.setDate(validUntil.getDate() + quotationMeta.validityDays);
+  const fmtDate = d => d.toLocaleDateString('en-LK', { year: 'numeric', month: 'long', day: 'numeric' });
+  const quotNumber = 'QT-' + issueDate.getFullYear() + String(issueDate.getMonth()+1).padStart(2,'0') + String(issueDate.getDate()).padStart(2,'0') + '-' + String(Math.floor(Math.random() * 900) + 100);
+
+  const pkgLabels = { zipLockBag: 'Zip Lock Bag', plasticBottle: 'Plastic Bottle', glassBottle: 'Glass Bottle' };
+  const deliveryLabel = DELIVERY_AREAS.find(a => a.key === quotationMeta.deliveryArea)?.label || 'Colombo';
+  const deliveryCharge = quotationMeta.includeDeliveryInQuot ? (data.deliveryCharges?.[quotationMeta.deliveryArea] || 0) : 0;
+
+  // Build table body
+  const tableBody = [
+    [
+      { text: '#', style: 'tableHeader', alignment: 'center' },
+      { text: 'Product', style: 'tableHeader' },
+      { text: 'Weight', style: 'tableHeader', alignment: 'center' },
+      { text: 'Qty', style: 'tableHeader', alignment: 'center' },
+      { text: 'Unit Price (Rs.)', style: 'tableHeader', alignment: 'right' },
+      { text: 'Total (Rs.)', style: 'tableHeader', alignment: 'right' }
+    ]
+  ];
+
+  selectedProducts.forEach((p, i) => {
+    tableBody.push([
+      { text: String(i + 1), alignment: 'center', fontSize: 9 },
+      { text: p.name, fontSize: 9 },
+      { text: p.weight, alignment: 'center', fontSize: 9 },
+      { text: String(p.qty), alignment: 'center', fontSize: 9 },
+      { text: formatPrice(p.unitPrice), alignment: 'right', fontSize: 9 },
+      { text: formatPrice(p.lineTotal), alignment: 'right', fontSize: 9, bold: true }
+    ]);
+  });
+
+  // Grand total row
+  tableBody.push([
+    { text: '', border: [false, true, false, false] },
+    { text: '', border: [false, true, false, false] },
+    { text: '', border: [false, true, false, false] },
+    { text: 'TOTAL', colSpan: 2, alignment: 'right', bold: true, fontSize: 11, border: [false, true, false, false], margin: [0, 4, 0, 0] },
+    {},
+    { text: 'Rs. ' + formatPrice(grandTotal), alignment: 'right', bold: true, fontSize: 12, color: '#15803d', border: [false, true, false, false], margin: [0, 4, 0, 0] }
+  ]);
+
+  // Customer info block
+  const customerInfo = [];
+  if (quotationMeta.customerName) customerInfo.push({ text: [{ text: 'To: ', bold: true }, quotationMeta.customerName], fontSize: 10 });
+  if (quotationMeta.customerPhone) customerInfo.push({ text: [{ text: 'Phone: ', bold: true }, quotationMeta.customerPhone], fontSize: 9, color: '#555' });
+  if (quotationMeta.customerEmail) customerInfo.push({ text: [{ text: 'Email: ', bold: true }, quotationMeta.customerEmail], fontSize: 9, color: '#555' });
+
+  const docDefinition = {
+    pageSize: 'A4',
+    pageMargins: [40, 40, 40, 60],
+
+    content: [
+      // Header with logo area
+      {
+        columns: [
+          {
+            width: '*',
+            stack: [
+              { text: 'GT Nutri Bites', style: 'companyName' },
+              { text: 'Premium Nuts, Seeds & Dried Fruits', fontSize: 9, color: '#666', margin: [0, 2, 0, 0] },
+              { text: 'Sri Lanka', fontSize: 8, color: '#999', margin: [0, 2, 0, 0] }
+            ]
+          },
+          {
+            width: 'auto',
+            stack: [
+              { text: 'QUOTATION', style: 'quotTitle' },
+              { text: quotNumber, fontSize: 9, color: '#15803d', alignment: 'right', bold: true, margin: [0, 2, 0, 0] }
+            ],
+            alignment: 'right'
+          }
+        ],
+        margin: [0, 0, 0, 0]
+      },
+
+      // Green divider line
+      { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 2, lineColor: '#22d472' }], margin: [0, 10, 0, 10] },
+
+      // Date and customer info
+      {
+        columns: [
+          {
+            width: '*',
+            stack: customerInfo.length > 0 ? customerInfo : [{ text: ' ', fontSize: 10 }]
+          },
+          {
+            width: 'auto',
+            stack: [
+              { text: [{ text: 'Date of Issue: ', bold: true, fontSize: 9 }, { text: fmtDate(issueDate), fontSize: 9 }], alignment: 'right' },
+              { text: [{ text: 'Valid Until: ', bold: true, fontSize: 9 }, { text: fmtDate(validUntil), fontSize: 9, color: '#dc2626' }], alignment: 'right', margin: [0, 3, 0, 0] },
+              { text: [{ text: 'Validity: ', bold: true, fontSize: 9 }, { text: quotationMeta.validityDays + ' days', fontSize: 9 }], alignment: 'right', margin: [0, 3, 0, 0] }
+            ],
+            alignment: 'right'
+          }
+        ],
+        margin: [0, 0, 0, 15]
+      },
+
+      // Info badges
+      {
+        columns: [
+          {
+            width: '*',
+            table: {
+              widths: ['*'],
+              body: [[
+                { text: [
+                  { text: 'Packaging: ', bold: true },
+                  pkgLabels[quotationMeta.packagingType] || 'Zip Lock Bag',
+                  '   |   ',
+                  { text: 'Delivery: ', bold: true },
+                  quotationMeta.includeDeliveryInQuot ? deliveryLabel + ' (Rs. ' + formatPrice(deliveryCharge) + ')' : 'Not Included',
+                  data.profitMargin > 0 ? '   |   ' + 'Margin: ' + data.profitMargin + '%' : ''
+                ], fontSize: 8, color: '#555', margin: [8, 5, 8, 5] }
+              ]]
+            },
+            layout: {
+              fillColor: '#f0fdf4',
+              hLineWidth: function() { return 0.5; },
+              vLineWidth: function() { return 0.5; },
+              hLineColor: function() { return '#bbf7d0'; },
+              vLineColor: function() { return '#bbf7d0'; }
+            }
+          }
+        ],
+        margin: [0, 0, 0, 15]
+      },
+
+      // Section title
+      { text: 'Product Details', style: 'sectionTitle', margin: [0, 0, 0, 8] },
+
+      // Products table
+      {
+        table: {
+          headerRows: 1,
+          widths: [25, '*', 50, 30, 80, 80],
+          body: tableBody
+        },
+        layout: {
+          fillColor: function(rowIndex) {
+            if (rowIndex === 0) return '#15803d';
+            return rowIndex % 2 === 0 ? '#f9fafb' : null;
+          },
+          hLineWidth: function(i, node) {
+            return (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5;
+          },
+          vLineWidth: function() { return 0.5; },
+          hLineColor: function(i) {
+            return i <= 1 ? '#15803d' : '#e5e7eb';
+          },
+          vLineColor: function() { return '#e5e7eb'; },
+          paddingLeft: function() { return 6; },
+          paddingRight: function() { return 6; },
+          paddingTop: function() { return 5; },
+          paddingBottom: function() { return 5; }
+        }
+      },
+
+      // Summary section
+      {
+        margin: [0, 20, 0, 0],
+        columns: [
+          {
+            width: '*',
+            stack: [
+              { text: 'Summary', style: 'sectionTitle', margin: [0, 0, 0, 6] },
+              { text: [{ text: 'Total Products: ', bold: true }, String(selectedProducts.length)], fontSize: 9, margin: [0, 2, 0, 0] },
+              { text: [{ text: 'Total Items: ', bold: true }, String(totalItems)], fontSize: 9, margin: [0, 2, 0, 0] },
+              quotationMeta.includeDeliveryInQuot
+                ? { text: [{ text: 'Delivery: ', bold: true }, deliveryLabel + ' — Rs. ' + formatPrice(deliveryCharge) + ' (included per item)'], fontSize: 9, margin: [0, 2, 0, 0] }
+                : { text: [{ text: 'Delivery: ', bold: true }, 'Not included in prices'], fontSize: 9, margin: [0, 2, 0, 0] }
+            ]
+          },
+          {
+            width: 180,
+            table: {
+              widths: ['*', 'auto'],
+              body: [
+                [
+                  { text: 'Grand Total', bold: true, fontSize: 12, margin: [8, 8, 0, 8] },
+                  { text: 'Rs. ' + formatPrice(grandTotal), bold: true, fontSize: 14, color: '#15803d', alignment: 'right', margin: [0, 7, 8, 8] }
+                ]
+              ]
+            },
+            layout: {
+              fillColor: function() { return '#f0fdf4'; },
+              hLineWidth: function() { return 1; },
+              vLineWidth: function() { return 1; },
+              hLineColor: function() { return '#22c55e'; },
+              vLineColor: function() { return '#22c55e'; }
+            }
+          }
+        ]
+      },
+
+      // Terms section
+      {
+        margin: [0, 30, 0, 0],
+        stack: [
+          { text: 'Terms & Conditions', style: 'sectionTitle', margin: [0, 0, 0, 6] },
+          { text: '1. This quotation is valid for ' + quotationMeta.validityDays + ' days from the date of issue.', fontSize: 8, color: '#666', margin: [0, 2, 0, 0] },
+          { text: '2. Prices are quoted in Sri Lankan Rupees (LKR) and are inclusive of packaging costs.', fontSize: 8, color: '#666', margin: [0, 2, 0, 0] },
+          { text: quotationMeta.includeDeliveryInQuot
+              ? '3. Delivery charges for ' + deliveryLabel + ' area (Rs. ' + formatPrice(deliveryCharge) + ') are included in the unit prices.'
+              : '3. Delivery charges are not included. Delivery will be charged separately.',
+            fontSize: 8, color: '#666', margin: [0, 2, 0, 0] },
+          { text: '4. All products are subject to availability at the time of order confirmation.', fontSize: 8, color: '#666', margin: [0, 2, 0, 0] },
+          { text: '5. Payment terms: Full payment required upon order confirmation.', fontSize: 8, color: '#666', margin: [0, 2, 0, 0] }
+        ]
+      }
+    ],
+
+    // Footer
+    footer: function(currentPage, pageCount) {
+      return {
+        columns: [
+          { text: 'GT Nutri Bites — Premium Nuts, Seeds & Dried Fruits', fontSize: 7, color: '#999', margin: [40, 0, 0, 0] },
+          { text: 'Page ' + currentPage + ' of ' + pageCount + '  |  ' + quotNumber, fontSize: 7, color: '#999', alignment: 'right', margin: [0, 0, 40, 0] }
+        ],
+        margin: [0, 15, 0, 0]
+      };
+    },
+
+    // Styles
+    styles: {
+      companyName: {
+        fontSize: 20,
+        bold: true,
+        color: '#15803d'
+      },
+      quotTitle: {
+        fontSize: 22,
+        bold: true,
+        color: '#111827'
+      },
+      sectionTitle: {
+        fontSize: 11,
+        bold: true,
+        color: '#15803d'
+      },
+      tableHeader: {
+        bold: true,
+        fontSize: 9,
+        color: 'white'
+      }
+    },
+
+    defaultStyle: {
+      font: 'Roboto'
+    }
+  };
+
+  // Generate filename
+  const customerNameSlug = (quotationMeta.customerName || 'customer').replace(/[^a-zA-Z0-9]/g, '-').replace(/-+/g, '-').toLowerCase();
+  const fileName = 'GT-Nutri-Bites-Quotation-' + customerNameSlug + '-' + quotNumber + '.pdf';
+
+  pdfMake.createPdf(docDefinition).download(fileName);
+  toast('📄 Quotation PDF generated successfully!');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
