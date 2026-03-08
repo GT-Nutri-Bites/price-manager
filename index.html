@@ -1811,6 +1811,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
             <input type="number" id="deliveryCharge-other" min="0" step="1" value="450" placeholder="0" oninput="updateDeliveryCharges('other',this.value)" />
           </div>
         </div>
+        <div class="action-card">
+          <div class="action-card-header">
+            <div class="action-card-icon" style="background:rgba(34,197,94,0.1);">💹</div>
+            <div class="action-card-title">Profit Margin</div>
+          </div>
+          <div class="action-card-desc">Set a profit margin percentage applied on top of the total cost (raw + packaging + delivery) to calculate the final selling price.</div>
+          <div class="delivery-field" style="margin-top:0;">
+            <label>Profit Margin (%)</label>
+            <input type="number" id="profitMarginInput" min="0" step="0.5" value="0" placeholder="0" oninput="updateProfitMargin(this.value)" />
+          </div>
+        </div>
       </div>
 
       <!-- Final Prices (Page 3) -->
@@ -1858,7 +1869,8 @@ const DEFAULT_DATA = {
     "colombo": 350,
     "suburban": 400,
     "other": 450
-  }
+  },
+  "profitMargin": 0
 };
 
 const BADGE_OPTIONS = [
@@ -1910,9 +1922,14 @@ function init() {
   if (typeof data.deliveryCharges === 'number') {
     data.deliveryCharges = { colombo: data.deliveryCharges, suburban: data.deliveryCharges, other: data.deliveryCharges };
   }
+  if (data.profitMargin === undefined) {
+    data.profitMargin = DEFAULT_DATA.profitMargin;
+  }
   renderSidebar();
   updateStats();
   renderPackagingTable();
+  const marginInput = document.getElementById('profitMarginInput');
+  if (marginInput) marginInput.value = data.profitMargin;
   if (data.products.length > 0) selectProduct(data.products[0].id);
   setupKeyboard();
   setupBeforeUnload();
@@ -1934,6 +1951,8 @@ function loadDefaultData() {
   currentId = null;
   searchQuery = '';
   document.getElementById('sidebarSearch').value = '';
+  const marginInput = document.getElementById('profitMarginInput');
+  if (marginInput) marginInput.value = data.profitMargin;
   localStorage.removeItem(STORAGE_KEY);
   renderSidebar();
   updateStats();
@@ -2690,6 +2709,7 @@ function syntaxHighlight(json) {
 
 function buildOutput() {
   const delivery = getDeliveryCharge();
+  const margin = data.profitMargin || 0;
   return {
     weightOptions: data.weightOptions,
     products: data.products.map(p => {
@@ -2702,10 +2722,12 @@ function buildOutput() {
           const pkgWeight = getPackagingWeight(w);
           const pkgCost = pkgCosts[pkgWeight] || 0;
           if (product.weightVariants[w].price != null) {
-            product.weightVariants[w].price = product.weightVariants[w].price + pkgCost + delivery;
+            const cost = product.weightVariants[w].price + pkgCost + delivery;
+            product.weightVariants[w].price = Math.round(cost * (1 + margin / 100));
           }
           if (product.weightVariants[w].oldPrice != null) {
-            product.weightVariants[w].oldPrice = product.weightVariants[w].oldPrice + pkgCost + delivery;
+            const cost = product.weightVariants[w].oldPrice + pkgCost + delivery;
+            product.weightVariants[w].oldPrice = Math.round(cost * (1 + margin / 100));
           }
         }
       });
@@ -2718,7 +2740,8 @@ function buildOutput() {
     }),
     iconColors: data.iconColors,
     packagingCosts: data.packagingCosts,
-    deliveryCharges: data.deliveryCharges
+    deliveryCharges: data.deliveryCharges,
+    profitMargin: data.profitMargin
   };
 }
 
@@ -2896,6 +2919,11 @@ function updateDeliveryCharges(area, value) {
   markGlobalUnsaved();
 }
 
+function updateProfitMargin(value) {
+  data.profitMargin = value === '' ? 0 : Math.max(0, parseFloat(value) || 0);
+  markGlobalUnsaved();
+}
+
 function markGlobalUnsaved() {
   // Mark all products as having potential changes since global settings changed
   unsaved._global = true;
@@ -2905,17 +2933,21 @@ function buildFinalPriceCards(p, pkgType) {
   if (!data.packagingCosts) return '';
   const pkgCosts = data.packagingCosts[pkgType] || {};
   const delivery = getDeliveryCharge();
+  const margin = data.profitMargin || 0;
 
   return PKG_WEIGHTS.map(w => {
     const rawPrice = p.weightVariants[w]?.price || 0;
     const pkgCost = pkgCosts[w] || 0;
-    const totalPrice = rawPrice + pkgCost + delivery;
+    const subtotal = rawPrice + pkgCost + delivery;
+    const profitAmount = Math.round(subtotal * margin / 100);
+    const totalPrice = subtotal + profitAmount;
     return `
     <div class="final-price-card">
       <div class="fp-weight">${w}</div>
       <div class="fp-row"><span>Raw Price</span><span>Rs. ${formatPrice(rawPrice)}</span></div>
       <div class="fp-row"><span>Packaging</span><span>Rs. ${formatPrice(pkgCost)}</span></div>
       <div class="fp-row"><span>Delivery</span><span>Rs. ${formatPrice(delivery)}</span></div>
+      ${margin > 0 ? `<div class="fp-row"><span>Profit (${margin}%)</span><span>Rs. ${formatPrice(profitAmount)}</span></div>` : ''}
       <div class="fp-divider"></div>
       <div class="fp-total"><span>Total</span><span>Rs. ${formatPrice(totalPrice)}</span></div>
     </div>`;
@@ -2939,6 +2971,7 @@ function saveToLocalStorage() {
     const output = buildOutput();
     output.packagingCosts = data.packagingCosts;
     output.deliveryCharges = data.deliveryCharges;
+    output.profitMargin = data.profitMargin;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(output));
     unsaved = {};
     renderSidebar();
@@ -2964,6 +2997,9 @@ function loadFromLocalStorage() {
         if (typeof data.deliveryCharges === 'number') {
           data.deliveryCharges = { colombo: data.deliveryCharges, suburban: data.deliveryCharges, other: data.deliveryCharges };
         }
+        if (data.profitMargin === undefined) {
+          data.profitMargin = DEFAULT_DATA.profitMargin;
+        }
         return true;
       }
     }
@@ -2982,6 +3018,7 @@ function printPriceList() {
 
   const now = new Date().toLocaleDateString('en-LK', { year: 'numeric', month: 'long', day: 'numeric' });
   const delivery = getDeliveryCharge();
+  const margin = data.profitMargin || 0;
   const pkgCosts = data.packagingCosts || {};
 
   // Build product rows by type
@@ -3033,7 +3070,8 @@ function printPriceList() {
       PKG_WEIGHTS.forEach(w => {
         const raw = p.weightVariants[w]?.price || 0;
         const pkg = pkgCosts.zipLockBag?.[w] || 0;
-        const total = raw + pkg + delivery;
+        const subtotal = raw + pkg + delivery;
+        const total = Math.round(subtotal * (1 + margin / 100));
         finalRows += `<td>Rs. ${formatPrice(total)}</td>`;
       });
       finalRows += '</tr>';
@@ -3065,7 +3103,8 @@ function printPriceList() {
 
       <div class="print-summary">
         <div><strong>Delivery Charges:</strong> Colombo: Rs. ${formatPrice(data.deliveryCharges?.colombo || 0)} · Suburban: Rs. ${formatPrice(data.deliveryCharges?.suburban || 0)} · Other: Rs. ${formatPrice(data.deliveryCharges?.other || 0)}</div>
-        <div><strong>Formula:</strong> Raw Price + Packaging Cost + Delivery = Total Price</div>
+        ${margin > 0 ? `<div><strong>Profit Margin:</strong> ${margin}%</div>` : ''}
+        <div><strong>Formula:</strong> (Raw Price + Packaging Cost + Delivery)${margin > 0 ? ` × (1 + ${margin}%)` : ''} = Total Price</div>
       </div>
 
       <div class="print-section-title">💰 Final Prices (with Zip Lock Bag packaging)</div>
@@ -3137,6 +3176,7 @@ function renderFinalPricesPage() {
   if (!container) return;
 
   const delivery = getDeliveryCharge();
+  const margin = data.profitMargin || 0;
   const types = [
     { key: 'nuts', label: 'Nuts' },
     { key: 'seeds', label: 'Seeds' },
@@ -3165,7 +3205,8 @@ function renderFinalPricesPage() {
         const raw = p.weightVariants[w]?.price || 0;
         const pkgWeight = getPackagingWeight(w);
         const pkg = pkgCosts[pkgWeight] || 0;
-        const total = raw + pkg + delivery;
+        const subtotal = raw + pkg + delivery;
+        const total = Math.round(subtotal * (1 + margin / 100));
         rows += `<td style="color:var(--accent);font-weight:600;">Rs. ${formatPrice(total)}</td>`;
       });
       rows += '</tr>';
@@ -3176,7 +3217,7 @@ function renderFinalPricesPage() {
     <div class="welcome-header">
       <div class="welcome-eyebrow">Pricing</div>
       <div class="welcome-title">Final Product Prices</div>
-      <div class="welcome-sub">These are the actual selling prices including raw material cost, packaging, and delivery.</div>
+      <div class="welcome-sub">These are the actual selling prices including raw material cost, packaging, delivery${margin > 0 ? `, and ${margin}% profit margin` : ''}.</div>
     </div>
     <div class="delivery-field" style="margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;">
@@ -3190,6 +3231,7 @@ function renderFinalPricesPage() {
         </select>
       </div>
     </div>
+    ${margin > 0 ? `<div style="margin-bottom:16px;padding:10px 14px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;font-size:13px;color:var(--text-secondary);display:flex;align-items:center;gap:8px;">💹 Profit margin of <strong style="color:var(--accent);">${margin}%</strong> applied to all prices</div>` : ''}
     <div class="section" style="overflow-x:auto;">
       <div class="section-body" style="padding:0;">
         <table class="fp-table">
