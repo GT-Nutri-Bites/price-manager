@@ -2130,11 +2130,15 @@ const DELIVERY_AREAS = [
   { key: "other", label: "Any Other Area" }
 ];
 
+function persistToLocalStorage() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
 function scheduleAutoSave() {
   if (autoSaveTimer) clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      persistToLocalStorage();
       const indicator = document.getElementById('autoSaveIndicator');
       if (indicator) {
         indicator.classList.add('show');
@@ -3262,7 +3266,7 @@ function updateFinalPriceDisplay(id) {
 // ─────────────────────────────────────────────────────────────────────────────
 function saveToLocalStorage() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    persistToLocalStorage();
     unsaved = {};
     renderSidebar();
     toast('💾 Price list saved to browser');
