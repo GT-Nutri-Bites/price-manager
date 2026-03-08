@@ -3744,7 +3744,6 @@ function loadPdfScript(src) {
 async function ensurePdfMake() {
   if (typeof pdfMake !== 'undefined') return true;
   const cdns = [
-    { main: 'lib/pdfmake.min.js', fonts: 'lib/vfs_fonts.js' },
     { main: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.18/pdfmake.min.js', fonts: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.18/vfs_fonts.js' },
     { main: 'https://cdn.jsdelivr.net/npm/pdfmake@0.2.18/build/pdfmake.min.js', fonts: 'https://cdn.jsdelivr.net/npm/pdfmake@0.2.18/build/vfs_fonts.js' }
   ];
@@ -3753,7 +3752,7 @@ async function ensurePdfMake() {
       await loadPdfScript(cdn.main);
       await loadPdfScript(cdn.fonts);
       if (typeof pdfMake !== 'undefined') return true;
-    } catch (e) { /* try next source */ }
+    } catch (e) { console.warn('pdfmake: failed to load from', cdn.main, e); }
   }
   return false;
 }
