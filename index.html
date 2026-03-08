@@ -2638,7 +2638,7 @@ function updateWeightPrice(id, weight, field, value, inputEl) {
 
   // Auto-calculate other weight prices when 1kg is edited
   // Auto-calculate other weights from 1kg price using proportional multipliers.
-  // Prices scale linearly by weight: 100g=10%, 250g=25%, 500g=50%, 750g=75% of 1kg.
+  // Prices scale linearly by weight: 100g=10%, 250g=25%, 500g=50%, 750g=75%, 2kg=200% of 1kg.
   if (weight === '1kg' && val !== null && !isNaN(val) && val > 0) {
     const multipliers = { '100g': 0.10, '250g': 0.25, '500g': 0.50, '750g': 0.75, '2kg': 2.0 };
     for (const [w, mult] of Object.entries(multipliers)) {
@@ -2909,8 +2909,7 @@ function buildOutput() {
 
       WEIGHTS.forEach(w => {
         if (product.weightVariants[w]) {
-          const pkgWeight = getPackagingWeight(w);
-          const pkgCost = pkgCosts[pkgWeight] || 0;
+          const pkgCost = pkgCosts[w] || 0;
           if (product.weightVariants[w].price != null) {
             const cost = product.weightVariants[w].price + pkgCost + delivery;
             product.weightVariants[w].price = Math.round(cost * (1 + margin / 100));
@@ -3310,11 +3309,6 @@ function printPriceList() {
 // Tab / Page switching
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Returns the packaging weight tier for a given weight
-function getPackagingWeight(w) {
-  return w;
-}
-
 function switchPage(pageNum) {
   currentPage = pageNum;
 
@@ -3392,8 +3386,7 @@ function renderFinalPricesPage() {
         </td>`;
       WEIGHTS.forEach(w => {
         const raw = p.weightVariants[w]?.price || 0;
-        const pkgWeight = getPackagingWeight(w);
-        const pkg = pkgCosts[pkgWeight] || 0;
+        const pkg = pkgCosts[w] || 0;
         const subtotal = raw + pkg + delivery;
         const total = Math.round(subtotal * (1 + margin / 100));
         rows += `<td style="color:var(--accent);font-weight:600;">Rs. ${formatPrice(total)}</td>`;
@@ -3500,8 +3493,7 @@ function initQuotationSelections() {
 function getQuotFinalPrice(product, weight) {
   const raw = product.weightVariants[weight]?.price || 0;
   const pkgType = quotationMeta.packagingType || 'zipLockBag';
-  const pkgWeight = getPackagingWeight(weight);
-  const pkgCost = data.packagingCosts?.[pkgType]?.[pkgWeight] || 0;
+  const pkgCost = data.packagingCosts?.[pkgType]?.[weight] || 0;
   const delivery = quotationMeta.includeDeliveryInQuot
     ? (data.deliveryCharges?.[quotationMeta.deliveryArea] || 0)
     : 0;
