@@ -3104,7 +3104,7 @@ function printPriceList() {
       <div class="print-summary">
         <div><strong>Delivery Charges:</strong> Colombo: Rs. ${formatPrice(data.deliveryCharges?.colombo || 0)} · Suburban: Rs. ${formatPrice(data.deliveryCharges?.suburban || 0)} · Other: Rs. ${formatPrice(data.deliveryCharges?.other || 0)}</div>
         ${margin > 0 ? `<div><strong>Profit Margin:</strong> ${margin}%</div>` : ''}
-        <div><strong>Formula:</strong> (Raw Price + Packaging Cost + Delivery) × ${margin > 0 ? `(1 + ${margin}%) ` : ''}= Total Price</div>
+        <div><strong>Formula:</strong> (Raw Price + Packaging Cost + Delivery)${margin > 0 ? ` × (1 + ${margin}%)` : ''} = Total Price</div>
       </div>
 
       <div class="print-section-title">💰 Final Prices (with Zip Lock Bag packaging)</div>
