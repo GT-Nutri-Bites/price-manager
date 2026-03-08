@@ -2428,10 +2428,10 @@ function updateWeightPrice(id, weight, field, value, inputEl) {
   p.weightVariants[weight][field] = (isNaN(val) || val === null) ? null : val;
 
   // Auto-calculate other weight prices when 1kg is edited
-  // Auto-calculate other weights from 1kg price using per-gram premium multipliers.
-  // Smaller packs carry a per-gram premium: 100g≈11%, 250g≈26.4%, 500g≈51.8%, 750g≈76.4% of 1kg.
+  // Auto-calculate other weights from 1kg price using proportional multipliers.
+  // Prices scale linearly by weight: 100g=10%, 250g=25%, 500g=50%, 750g=75%, 2kg=200% of 1kg.
   if (weight === '1kg' && val !== null && !isNaN(val) && val > 0) {
-    const multipliers = { '100g': 0.11, '250g': 0.264, '500g': 0.518, '750g': 0.764 };
+    const multipliers = { '100g': 0.10, '250g': 0.25, '500g': 0.50, '750g': 0.75, '2kg': 2.0 };
     for (const [w, mult] of Object.entries(multipliers)) {
       const calcVal = Math.round(val * mult);
       if (!p.weightVariants[w]) p.weightVariants[w] = { price: null, oldPrice: null };
