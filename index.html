@@ -3601,7 +3601,7 @@ function renderQuotationPage() {
           </div>
         </td>
         <td>
-          <select class="quot-weight-select" value="${sel.weight}" onchange="updateQuotWeight(${p.id},this.value)" ${sel.selected ? '' : 'disabled'} aria-label="Weight for ${escHtml(p.name)}">
+          <select class="quot-weight-select" onchange="updateQuotWeight(${p.id},this.value)" ${sel.selected ? '' : 'disabled'} aria-label="Weight for ${escHtml(p.name)}">
             ${WEIGHTS.map(w => `<option value="${w}"${sel.weight === w ? ' selected' : ''}>${w}</option>`).join('')}
           </select>
         </td>
@@ -3770,7 +3770,7 @@ function generateQuotationPDF() {
   const validUntil = new Date(issueDate);
   validUntil.setDate(validUntil.getDate() + quotationMeta.validityDays);
   const fmtDate = d => d.toLocaleDateString('en-LK', { year: 'numeric', month: 'long', day: 'numeric' });
-  const quotNumber = 'QT-' + issueDate.getFullYear() + String(issueDate.getMonth()+1).padStart(2,'0') + String(issueDate.getDate()).padStart(2,'0') + '-' + String(Math.floor(Math.random() * 900) + 100);
+  const quotNumber = 'QT-' + issueDate.getFullYear() + String(issueDate.getMonth()+1).padStart(2,'0') + String(issueDate.getDate()).padStart(2,'0') + '-' + Date.now().toString(36).slice(-4).toUpperCase();
 
   const pkgLabels = { zipLockBag: 'Zip Lock Bag', plasticBottle: 'Plastic Bottle', glassBottle: 'Glass Bottle' };
   const deliveryLabel = DELIVERY_AREAS.find(a => a.key === quotationMeta.deliveryArea)?.label || 'Colombo';
