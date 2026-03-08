@@ -1880,6 +1880,7 @@ let unsaved = {};
 let searchQuery = '';
 let currentPage = 1;
 let selectedDeliveryArea = 'colombo';
+let includeDelivery = false;
 
 const DELIVERY_AREAS = [
   { key: "colombo", label: "Colombo" },
@@ -1888,6 +1889,7 @@ const DELIVERY_AREAS = [
 ];
 
 function getDeliveryCharge() {
+  if (!includeDelivery) return 0;
   if (typeof data.deliveryCharges === 'object' && data.deliveryCharges !== null) {
     return data.deliveryCharges[selectedDeliveryArea] || DEFAULT_DATA.deliveryCharges.colombo;
   }
@@ -2709,12 +2711,8 @@ function buildOutput() {
       });
 
       const dw = product.weight;
-      const dwPkgWeight = getPackagingWeight(dw);
-      const dwPkgCost = pkgCosts[dwPkgWeight] || 0;
-      product.price = (p.weightVariants[dw]?.price || 0) + dwPkgCost + delivery;
-      product.oldPrice = p.weightVariants[dw]?.oldPrice != null
-        ? p.weightVariants[dw].oldPrice + dwPkgCost + delivery
-        : null;
+      product.price = product.weightVariants[dw]?.price || 0;
+      product.oldPrice = product.weightVariants[dw]?.oldPrice || null;
 
       return product;
     }),
@@ -3180,11 +3178,17 @@ function renderFinalPricesPage() {
       <div class="welcome-title">Final Product Prices</div>
       <div class="welcome-sub">These are the actual selling prices including raw material cost, packaging, and delivery.</div>
     </div>
-    <div class="delivery-field" style="margin-bottom:16px;">
-      <label>Delivery Area</label>
-      <select id="deliveryAreaSelect" onchange="changeDeliveryArea(this.value)" style="background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:7px 10px;outline:none;">
-        ${DELIVERY_AREAS.map(a => `<option value="${a.key}"${selectedDeliveryArea === a.key ? ' selected' : ''}>${a.label} (Rs. ${data.deliveryCharges[a.key] || 0})</option>`).join('')}
-      </select>
+    <div class="delivery-field" style="margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;">
+        <input type="checkbox" id="includeDeliveryToggle" ${includeDelivery ? 'checked' : ''} onchange="toggleIncludeDelivery(this.checked)" style="cursor:pointer;" />
+        Include Delivery
+      </label>
+      <div id="deliveryAreaWrapper" style="display:${includeDelivery ? 'flex' : 'none'};align-items:center;gap:8px;">
+        <label>Delivery Area</label>
+        <select id="deliveryAreaSelect" onchange="changeDeliveryArea(this.value)" style="background:var(--surface);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:7px 10px;outline:none;">
+          ${DELIVERY_AREAS.map(a => `<option value="${a.key}"${selectedDeliveryArea === a.key ? ' selected' : ''}>${a.label} (Rs. ${data.deliveryCharges[a.key] || 0})</option>`).join('')}
+        </select>
+      </div>
     </div>
     <div class="section" style="overflow-x:auto;">
       <div class="section-body" style="padding:0;">
@@ -3214,6 +3218,11 @@ function renderFinalPricesPage() {
 
 function changeDeliveryArea(area) {
   selectedDeliveryArea = area;
+  renderFinalPricesPage();
+}
+
+function toggleIncludeDelivery(checked) {
+  includeDelivery = checked;
   renderFinalPricesPage();
 }
 
