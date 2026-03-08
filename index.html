@@ -9,8 +9,8 @@
 <title>GT Nutri Bites — Price Manager</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.18/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.18/vfs_fonts.js"></script>
+<script src="lib/pdfmake.min.js"></script>
+<script src="lib/vfs_fonts.js"></script>
 <style>
 /* ── Variables ───────────────────────────────── */
 :root {
@@ -3731,10 +3731,40 @@ function renderQuotationPage() {
     </div>`;
 }
 
-function generateQuotationPDF() {
+function loadPdfScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function ensurePdfMake() {
+  if (typeof pdfMake !== 'undefined') return true;
+  const cdns = [
+    { main: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.18/pdfmake.min.js', fonts: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.18/vfs_fonts.js' },
+    { main: 'https://cdn.jsdelivr.net/npm/pdfmake@0.2.18/build/pdfmake.min.js', fonts: 'https://cdn.jsdelivr.net/npm/pdfmake@0.2.18/build/vfs_fonts.js' }
+  ];
+  for (const cdn of cdns) {
+    try {
+      await loadPdfScript(cdn.main);
+      await loadPdfScript(cdn.fonts);
+      if (typeof pdfMake !== 'undefined') return true;
+    } catch (e) { console.warn('pdfmake: failed to load from', cdn.main, e); }
+  }
+  return false;
+}
+
+async function generateQuotationPDF() {
   if (typeof pdfMake === 'undefined') {
-    toast('⚠ PDF library not loaded. Please check your internet connection.', 'error');
-    return;
+    toast('⏳ Loading PDF library...', 'info');
+    const loaded = await ensurePdfMake();
+    if (!loaded) {
+      toast('⚠ PDF library could not be loaded. Please check your internet connection.', 'error');
+      return;
+    }
   }
 
   initQuotationSelections();
