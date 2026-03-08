@@ -329,6 +329,7 @@ aside {
   font-size: 16px;
   flex-shrink: 0;
   transition: all 0.15s;
+  overflow: hidden;
 }
 .product-item.active .product-emoji-wrap {
   background: var(--pill-bg);
@@ -434,6 +435,7 @@ main {
   font-size: 28px;
   flex-shrink: 0;
   box-shadow: var(--shadow);
+  overflow: hidden;
 }
 
 .product-title {
@@ -461,6 +463,7 @@ main {
 }
 .meta-chip.type-nuts { background: rgba(34,212,114,0.08); border-color: rgba(34,212,114,0.2); color: var(--accent); }
 .meta-chip.type-seeds { background: rgba(245,166,35,0.08); border-color: rgba(245,166,35,0.2); color: var(--amber); }
+.meta-chip.type-dried_fruits { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); color: #ef4444; }
 .meta-chip.type-mix { background: rgba(199,125,255,0.08); border-color: rgba(199,125,255,0.2); color: var(--purple); }
 
 .header-actions-right {
@@ -2523,6 +2526,7 @@ function renderEditor(p) {
             <select class="sel text-input" onchange="updateField(${p.id},'type',this.value)">
               <option value="nuts"  ${p.type==='nuts'  ?'selected':''}>🥜 Nuts</option>
               <option value="seeds" ${p.type==='seeds' ?'selected':''}>🌾 Seeds</option>
+              <option value="dried_fruits" ${p.type==='dried_fruits' ?'selected':''}>🍇 Dried Fruits</option>
               <option value="mix"   ${p.type==='mix'   ?'selected':''}>🥗 Mix</option>
             </select>
           </div>
